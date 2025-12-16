@@ -31,6 +31,8 @@ impl ForeignManager {
             send.write_all(packet).await?;
             send.finish()?;
 
+            // TODO generate code alongside packet and verify at the end. If the WRONG code is received (but a code is received) this indicates interference and the connection should be terminated for security.
+
             let mut buffer: Vec<u8> = Vec::new();
             Ok(match tokio::time::timeout(Duration::from_secs(5), recv.read(&mut buffer)).await {
                 Ok(read_result) => match read_result {
@@ -63,10 +65,12 @@ impl ForeignManager {
                 continue;
             }
 
-            // TODO Response verifying message was received correctly.
+            // TODO Response verifying message was received correctly. Echo back 32 bit code after parsing packet
             let _ = send.finish();
 
             // TODO Process packets.
+            // TODO Relay processed packet out via a sender to a central thread that manages every received packet.
+            // TODO packet must contain stable ID, code, type, data
             println!("Received packet containing {} bytes!", buffer.len());
 
         }
