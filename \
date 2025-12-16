@@ -16,7 +16,7 @@ type Receiver = async_channel::Receiver<ConnectionManagerMessage>;
 #[derive(Debug, Clone)]
 pub enum ConnectionManagerMessage {
     Quit,
-    Add(Foreign),
+    Add(Connection),
     Error(Error)
 }
 
@@ -53,7 +53,7 @@ impl ConnectionManager {
             match res {
 
                 // A new connection has been aquired.
-                Ok(connection) => send(ConnectionManagerMessage::Add(Foreign::new(connection)), &task_sender).await?,
+                Ok(connection) => send(ConnectionManagerMessage::Add(connection), &task_sender).await?,
                 Err(e) => send(ConnectionManagerMessage::Error(e.into()), &output).await?
             }
         }
@@ -61,7 +61,7 @@ impl ConnectionManager {
 
     async fn manage(receiver: Receiver, sender: Sender) -> Res<()> {
 
-        let mut connections: HashMap<usize, Foreign> = HashMap::new();
+        let mut connections: HashMap<usize, Connection> = HashMap::new();
 
         while let Ok(task) = receiver.recv().await {
             match task {
