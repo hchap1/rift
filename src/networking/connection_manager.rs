@@ -12,6 +12,7 @@ use tokio::task::JoinHandle;
 use crate::error::Error;
 use crate::error::Res;
 use crate::networking::server::Foreign;
+use crate::util::channel::send;
 
 pub type AM<T> = Arc<Mutex<T>>;
 
@@ -21,19 +22,25 @@ pub enum ConnectionManagerMessage {
 }
 
 pub struct ConnectionManager {
+    _listen_handle: JoinHandle<Res<()>>,
     connections: AM<HashMap<usize, Foreign>>,
-    sender_to_thread: Sender<ConnectionManagerMessage>
+    sender_to_thread: Sender<ConnectionManagerMessage>,
+    output: Receiver<ConnectionManagerMessage>
 }
 
 impl ConnectionManager {
 
     pub fn new(endpoint: Endpoint) -> ConnectionManager {
         let connections = Arc::new(Mutex::new(HashMap::new()));
-        let (sender, receiver) = unbounded();
+        let (thread_sender, thread_receiver) = unbounded();
+        let (output_sender, output_receiver) = unbounded();
+        let connections_clone = connections.clone();
 
         ConnectionManager {
+            _listen_handle: tokio::task::spawn(Self::listen(endpoint, connections_clone, output_sender)),
             connections,
-            sender_to_thread: sender
+            sender_to_thread: thread_sender,
+            output: output_receiver
         }
     }
 
@@ -54,7 +61,7 @@ impl ConnectionManager {
                     lock.insert(connection.stable_id(), Foreign::new(connection));
                 },
                 
-                Err(e) => sender.send(ConnectionManagerMessage::Error(Error::from(e))).await?
+                Err(e) => send(ConnectionManagerMessage::Error(e.into()), &sender).await?
             }
         }
     }
