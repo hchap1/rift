@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use iroh::endpoint::BindError;
+use iroh::endpoint::{BindError, ConnectError};
 
 pub type Res<T> = Result<T, Error>;
 
@@ -30,6 +30,7 @@ macro_rules! error_enum {
 
 error_enum! {
     pub enum Error {
-        BindError
+        BindError,
+        ConnectError
     }
 }
