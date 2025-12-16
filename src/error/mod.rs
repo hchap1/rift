@@ -1,5 +1,6 @@
 use std::sync::Arc;
-use iroh::endpoint::{BindError, ConnectError};
+use async_channel::{RecvError, SendError, TryRecvError};
+use iroh::endpoint::{BindError, ConnectError, ConnectingError};
 
 pub type Res<T> = Result<T, Error>;
 
@@ -28,9 +29,38 @@ macro_rules! error_enum {
     };
 }
 
+#[derive(Debug, Clone)]
+pub enum ChannelError {
+    ChannelDead,
+    ChannelEmpty
+}
+
+impl<T> From<SendError<T>> for ChannelError {
+    fn from(_: SendError<T>) -> ChannelError {
+        ChannelError::ChannelDead
+    }
+}
+
+impl From<RecvError> for ChannelError {
+    fn from(_: RecvError) -> ChannelError {
+        ChannelError::ChannelDead
+    }
+}
+
+impl From<TryRecvError> for ChannelError {
+    fn from(error: TryRecvError) -> ChannelError {
+        match error {
+            TryRecvError::Empty => ChannelError::ChannelEmpty,
+            _ => ChannelError::ChannelDead
+        }
+    }
+}
+
 error_enum! {
     pub enum Error {
         BindError,
-        ConnectError
+        ConnectError,
+        ConnectingError,
+        ChannelError
     }
 }

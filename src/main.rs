@@ -1,5 +1,6 @@
 mod networking;
 mod error;
+mod util;
 
 /*
     Plan

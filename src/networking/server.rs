@@ -3,12 +3,12 @@ use iroh::EndpointAddr;
 use iroh::endpoint::Connection;
 
 use crate::error::Res;
-use crate::error::Error;
 use crate::networking::ALPN;
+use crate::networking::connection_manager::ConnectionManager;
 
 pub struct Local {
     endpoint: Endpoint,
-    connections: Vec<Foreign>
+    connection_manager: ConnectionManager
 }
 
 impl Local {
@@ -19,20 +19,29 @@ impl Local {
             .bind()
             .await?;
 
-        Ok(Local { endpoint, connections: Vec::new() })
+        Ok(Local {
+            endpoint: endpoint.clone(),
+            connection_manager: ConnectionManager::new(endpoint)
+        })
     }
 }
 
 pub struct Foreign {
-    address: EndpointAddr,
+    stable_id: usize,
     connection: Connection
 }
 
 impl Foreign {
+
+    pub fn new(connection: Connection) -> Foreign {
+        Foreign {
+            stable_id: connection.stable_id(),
+            connection
+        }
+    }
     
     pub async fn establish(endpoint: Endpoint, target: EndpointAddr) -> Res<Foreign> {
-        let address = target.clone();
         let connection = endpoint.connect(target, ALPN).await?;
-        Ok(Foreign { address, connection })
+        Ok(Foreign { stable_id: connection.stable_id(), connection })
     }
 }
