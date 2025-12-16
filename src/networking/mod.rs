@@ -18,6 +18,6 @@
     If the foreign Server does not receive its code back via the original Client, then the original Client is lying about its Server.
 */
 
-pub mod Server {
+const ALPN: &[u8] = b"hchap1/v1";
 
-}
+pub mod server;
