@@ -1,0 +1,76 @@
+use std::time::Duration;
+
+use iroh::endpoint::Connection;
+use tokio::task::JoinHandle;
+
+use crate::error::Res;
+
+#[derive(Debug)]
+pub struct ForeignManager {
+   connection: Connection,
+   _receive_handle: JoinHandle<Res<()>>
+}
+
+impl ForeignManager {
+
+    pub fn new(connection: Connection) -> ForeignManager {
+        ForeignManager {
+            connection: connection.clone(),
+            _receive_handle: tokio::spawn(ForeignManager::receive(connection))
+        }
+    }
+
+    /// Establish a bi-directional channel through which the message can be streamed.
+    /// Ok(bool) represents the message being sent correctly, and the boolean indicates whether a confirmation was received.
+    /// This function yields a future that must be executed.
+    pub fn send_task(&self, packet: &[u8]) -> impl std::future::Future<Output = Res<bool>> {
+        let connection = self.connection.clone();
+
+        async move {
+            let (mut send, mut recv) = connection.open_bi().await?;
+            send.write_all(packet).await?;
+            send.finish()?;
+
+            let mut buffer: Vec<u8> = Vec::new();
+            Ok(match tokio::time::timeout(Duration::from_secs(5), recv.read(&mut buffer)).await {
+                Ok(read_result) => match read_result {
+                    Ok(read_option) => match read_option {
+                        Some(_bytes_read) => true,
+                        None => false // Special case where stream was finished early.
+                    },
+                    // Failed to read buffer (did not receive confirmation).
+                    Err(_) => false
+                },
+                // Timed out (did not receive confirmation).
+                Err(_) => false
+            })
+        }
+    }
+
+    pub async fn receive(connection: Connection) -> Res<()> {
+        
+        loop {
+            let (mut send, mut recv) = match connection.accept_bi().await {
+                Ok(v) => v,
+                _ => return Ok(())
+            };
+
+            let mut buffer: Vec<u8> = Vec::new();
+
+            // All errors indicate failure of this transmission.
+            if recv.read(&mut buffer).await.is_err() {
+                let _ = send.finish();
+                continue;
+            }
+
+            // TODO Response verifying message was received correctly.
+            let _ = send.finish();
+
+            // TODO Process packets.
+            println!("Received packet containing {} bytes!", buffer.len());
+
+        }
+
+    }
+
+}

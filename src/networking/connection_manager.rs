@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use async_channel::unbounded;
 use iroh::Endpoint;
-use iroh::endpoint::Connection;
 use tokio::task::JoinHandle;
 
 use crate::error::Error;

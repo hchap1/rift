@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use iroh::Endpoint;
 use iroh::EndpointAddr;
 use iroh::endpoint::Connection;
@@ -6,6 +8,7 @@ use crate::error::Res;
 use crate::networking::ALPN;
 use crate::networking::connection_manager::ConnectionManager;
 use crate::networking::connection_manager::ConnectionManagerMessage;
+use crate::networking::foreign_manager::ForeignManager;
 use crate::util::channel::send;
 
 pub struct Local {
@@ -41,7 +44,7 @@ impl Local {
 #[derive(Clone, Debug)]
 pub struct Foreign {
     stable_id: usize,
-    connection: Connection
+    foreign_manager: Arc<ForeignManager>
 }
 
 impl Foreign {
@@ -49,13 +52,13 @@ impl Foreign {
     pub fn new(connection: Connection) -> Foreign {
         Foreign {
             stable_id: connection.stable_id(),
-            connection
+            foreign_manager: Arc::new(ForeignManager::new(connection))
         }
     }
     
     pub async fn establish(endpoint: Endpoint, target: EndpointAddr) -> Res<Foreign> {
         let connection = endpoint.connect(target, ALPN).await?;
-        Ok(Foreign { stable_id: connection.stable_id(), connection })
+        Ok(Foreign::new(connection))
     }
 
     pub fn stable_id(&self) -> usize {

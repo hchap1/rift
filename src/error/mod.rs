@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use async_channel::{RecvError, SendError, TryRecvError};
-use iroh::endpoint::{BindError, ConnectError, ConnectingError};
+use iroh::endpoint::{BindError, ClosedStream, ConnectError, ConnectingError, ConnectionError, WriteError};
 
 pub type Res<T> = Result<T, Error>;
 
@@ -61,6 +61,9 @@ error_enum! {
         BindError,
         ConnectError,
         ConnectingError,
-        ChannelError
+        ChannelError,
+        ConnectionError,
+        WriteError,
+        ClosedStream
     }
 }
