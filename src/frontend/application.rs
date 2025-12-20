@@ -72,8 +72,12 @@ impl Page for Application {
 
                 Global::Connect(node_id) => match self.networking.as_ref() {
                     Some(local) => {
-                        let future = local.connect_task(node_id.into());
-                        Task::future(future).map(|res| match res {
+                        Task::future(Local::connect(
+                            local.ep(),
+                            local.cs(),
+                            local.ps(),
+                            node_id.into()
+                        )).map(|res| match res {
                             Ok(_) => Global::Notify(Notification::success(String::from("Connection made!"))).into(),
                             Err(error) => Global::Notify(error.into()).into()
                         })

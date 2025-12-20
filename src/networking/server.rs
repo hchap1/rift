@@ -46,6 +46,10 @@ impl Local {
         send(ConnectionManagerMessage::Add(foreign), &sender).await?;
         Ok(())
     }
+
+    pub fn ep(&self) -> Endpoint { self.endpoint.clone() }
+    pub fn cs(&self) -> Sender<ConnectionManagerMessage> { self.connection_manager.yield_sender() }
+    pub fn ps(&self) -> Sender<Packet> { self.packet_sender.clone() }
 }
 
 #[derive(Clone, Debug)]
