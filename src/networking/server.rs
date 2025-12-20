@@ -41,16 +41,10 @@ impl Local {
         })
     }
 
-    pub fn connect_task(&self, target: EndpointAddr) -> impl std::future::Future<Output = Res<()>> {
-        let endpoint = self.endpoint.clone();
-        let sender = self.connection_manager.yield_sender();
-        let packet_sender = self.packet_sender.clone();
-
-        async move {
-            let foreign = Foreign::establish(endpoint, target, packet_sender).await?;
-            send(ConnectionManagerMessage::Add(foreign), &sender).await?;
-            Ok(())
-        }
+    pub async fn connect(endpoint: Endpoint, sender: Sender<ConnectionManagerMessage>, packet_sender: Sender<Packet>, target: EndpointAddr) -> Res<()> {
+        let foreign = Foreign::establish(endpoint, target, packet_sender).await?;
+        send(ConnectionManagerMessage::Add(foreign), &sender).await?;
+        Ok(())
     }
 }
 

@@ -10,13 +10,11 @@ pub struct Application {
     add_chat_page: Option<Box<dyn Page>>,
     browse_chats_page: Option<Box<dyn Page>>,
     notification_stack: Vec<Notification>,
-    all_notifications: Vec<Notification>
 }
 
 pub trait Page {
     fn update(&mut self, message: Message) -> Task<Message>;
     fn view(&self) -> Container<'_, Message>;
-    fn poll_notifications(&mut self) -> Vec<Notification>;
 }
 
 impl Application {
@@ -28,7 +26,6 @@ impl Application {
             add_chat_page: None,
             browse_chats_page: None,
             notification_stack: vec![],
-            all_notifications: vec![]
         }
     }
 }
@@ -74,20 +71,26 @@ impl Page for Application {
                 }
 
                 Global::Connect(node_id) => match self.networking.as_ref() {
-                    Some(local) => Task::future(local.connect_task(node_id.into())).map(|res| match res {
-                        Ok(_) => Global::Notify(Notification::success(String::from("Connection made!"))).into(),
-                        Err(error) => Global::Notify(error.into()).into()
-                    }),
+                    Some(local) => {
+                        let future = local.connect_task(node_id.into());
+                        Task::future(future).map(|res| match res {
+                            Ok(_) => Global::Notify(Notification::success(String::from("Connection made!"))).into(),
+                            Err(error) => Global::Notify(error.into()).into()
+                        })
+                    }
                     None => Task::done(Global::Notify(Notification::error(String::from("Networking not initialised."))).into())
                 }
 
                 Global::None => Task::none(),
                 _ => Task::none()
             }
-        }
-    }
 
-    fn poll_notifications(&mut self) -> Vec<Notification> {
-        vec![]
+            Message::AddChatMessage(msg) => {
+                match self.add_chat_page.as_mut() {
+                    Some(page) => page.update(Message::AddChatMessage(msg)),
+                    None => Task::none()
+                }
+            }
+        }
     }
 }
