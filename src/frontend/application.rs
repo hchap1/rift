@@ -35,6 +35,14 @@ impl Notification {
             body: None
         }
     }
+
+    pub fn error(heading: String) -> Notification {
+        Notification {
+            kind: NotificationType::Error,
+            heading,
+            body: None
+        }
+    }
 }
 
 impl From<Error> for Notification {
