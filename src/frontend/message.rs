@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{error::Error, networking::{packet::Packet, server::Local}};
+use crate::{error::Error, frontend::pages::Pages, networking::{packet::Packet, server::Local}};
 
 macro_rules! message_enum {
     (
@@ -32,6 +32,7 @@ pub enum Global {
 
         // Basic
         Error(Error),
+        SwitchTo(Pages),
         None,
 
         // Load

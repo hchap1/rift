@@ -1,31 +1,65 @@
 use std::sync::Arc;
-
 use iced::{Task, widget::{Container, text}};
-
-use crate::{error::Res, frontend::message::{Global, Message}, networking::server::Local};
+use crate::{frontend::{message::{Global, Message}, pages::Pages}, networking::server::Local};
 
 pub struct Application {
     networking: Option<Local>,
+    active_page: Pages,
+    chat_page: Option<Box<dyn Page>>,
+    add_chat_page: Option<Box<dyn Page>>,
+    browse_chats_page: Option<Box<dyn Page>>
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum NotificationType {
+    Error,
+    Warning,
+    Info,
+    Success
+}
+
+#[derive(Debug, Clone)]
+pub struct Notification {
+    kind: NotificationType,
+    heading: String,
+    body: Option<String>
 }
 
 pub trait Page {
     fn update(&mut self, message: Message) -> Task<Message>;
     fn view(&self) -> Container<'_, Message>;
+    fn poll_notifications(&mut self) -> Vec<Notification>;
 }
 
 impl Application {
     pub fn new() -> Application {
         Application {
-            networking: None
+            networking: None,
+            active_page: Pages::BrowseChats,
+            chat_page: None,
+            add_chat_page: None,
+            browse_chats_page: None
         }
     }
 }
 
 impl Page for Application {
     fn view(&self) -> Container<'_, Message> {
-        Container::new(
-            text("Cool text")
-        )
+
+        let active_page = match &self.active_page {
+            Pages::Chat => &self.chat_page,
+            Pages::AddChat => &self.add_chat_page,
+            Pages::BrowseChats => &self.browse_chats_page
+        };
+
+        if let Some(page) = active_page {
+            page.view()
+        } else {
+            Container::new(
+                text("No active page.")
+            )
+        }
+
     }
 
     fn update(&mut self, message: Message) -> Task<Message> {
@@ -44,9 +78,18 @@ impl Page for Application {
                     Task::none()
                 }
 
+                Global::SwitchTo(page) => {
+                    self.active_page = page;
+                    Task::none()
+                }
+
                 Global::None => Task::none(),
                 _ => Task::none()
             }
         }
+    }
+
+    fn poll_notifications(&mut self) -> Vec<Notification> {
+        vec![]
     }
 }
