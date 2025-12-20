@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use crate::{error::Error, frontend::pages::Pages, networking::{packet::Packet, server::Local}};
+use iroh::EndpointId;
+
+use crate::{error::Error, frontend::{application::Notification, pages::Pages}, networking::{packet::Packet, server::Local}};
 
 macro_rules! message_enum {
     (
@@ -33,6 +35,7 @@ pub enum Global {
         // Basic
         Error(Error),
         SwitchTo(Pages),
+        Notify(Notification),
         None,
 
         // Load
@@ -42,7 +45,7 @@ pub enum Global {
         // Interface with backend
         Send(usize, Packet),
         Packet(usize, Packet),
-        Connect(usize),
+        Connect(EndpointId),
 }
 
 message_enum! {
