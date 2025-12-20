@@ -15,3 +15,5 @@ const ALPN: &[u8] = b"hchap1/v1";
 pub mod server;
 pub mod connection_manager;
 pub mod foreign_manager;
+pub mod packet;
+pub mod error;

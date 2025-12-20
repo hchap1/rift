@@ -2,6 +2,8 @@ use std::sync::Arc;
 use async_channel::{RecvError, SendError, TryRecvError};
 use iroh::endpoint::{BindError, ClosedStream, ConnectError, ConnectingError, ConnectionError, WriteError};
 
+use crate::networking::error::NetworkError;
+
 pub type Res<T> = Result<T, Error>;
 
 macro_rules! error_enum {
@@ -64,6 +66,7 @@ error_enum! {
         ChannelError,
         ConnectionError,
         WriteError,
-        ClosedStream
+        ClosedStream,
+        NetworkError
     }
 }
