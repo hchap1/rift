@@ -3,7 +3,7 @@ use std::time::Duration;
 use iroh::endpoint::Connection;
 use tokio::task::JoinHandle;
 
-use crate::error::Res;
+use crate::{error::Res, networking::{error::NetworkError, packet::Packet}};
 
 #[derive(Debug)]
 pub struct ForeignManager {
@@ -23,21 +23,37 @@ impl ForeignManager {
     /// Establish a bi-directional channel through which the message can be streamed.
     /// Ok(bool) represents the message being sent correctly, and the boolean indicates whether a confirmation was received.
     /// This function yields a future that must be executed.
-    pub fn send_task(&self, packet: &[u8]) -> impl std::future::Future<Output = Res<bool>> {
+    pub fn send_task(&self, packet: Packet) -> impl std::future::Future<Output = Res<bool>> {
         let connection = self.connection.clone();
 
         async move {
             let (mut send, mut recv) = connection.open_bi().await?;
-            send.write_all(packet).await?;
+            let expected_reply = packet.code;
+            send.write_all(&packet.to_bytes()).await?;
             send.finish()?;
-
-            // TODO generate code alongside packet and verify at the end. If the WRONG code is received (but a code is received) this indicates interference and the connection should be terminated for security.
 
             let mut buffer: Vec<u8> = Vec::new();
             Ok(match tokio::time::timeout(Duration::from_secs(5), recv.read(&mut buffer)).await {
                 Ok(read_result) => match read_result {
                     Ok(read_option) => match read_option {
-                        Some(_bytes_read) => true,
+                        Some(_bytes_read) => {
+                            if buffer.len() == 4 {
+                                let mut iterator = buffer.into_iter();
+
+                                let endians = [
+                                    iterator.next().ok_or(NetworkError::MalformedCode)?,
+                                    iterator.next().ok_or(NetworkError::MalformedCode)?,
+                                    iterator.next().ok_or(NetworkError::MalformedCode)?,
+                                    iterator.next().ok_or(NetworkError::MalformedCode)?
+                                ];
+
+                                let code = u32::from_be_bytes(endians);
+
+                                code == expected_reply
+                            } else {
+                                false
+                            }
+                        },
                         None => false // Special case where stream was finished early.
                     },
                     // Failed to read buffer (did not receive confirmation).
@@ -65,13 +81,9 @@ impl ForeignManager {
                 continue;
             }
 
-            // TODO Response verifying message was received correctly. Echo back 32 bit code after parsing packet
+            let packet = Packet::from_bytes(buffer)?;
+            send.write_all(&packet.code.to_be_bytes()).await?;
             let _ = send.finish();
-
-            // TODO Process packets.
-            // TODO Relay processed packet out via a sender to a central thread that manages every received packet.
-            // TODO packet must contain stable ID, code, type, data
-            println!("Received packet containing {} bytes!", buffer.len());
 
         }
 
