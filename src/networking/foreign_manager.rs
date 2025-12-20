@@ -1,9 +1,10 @@
 use std::time::Duration;
 
+use async_channel::Sender;
 use iroh::endpoint::Connection;
 use tokio::task::JoinHandle;
 
-use crate::{error::Res, networking::{error::NetworkError, packet::Packet}};
+use crate::{error::Res, networking::{error::NetworkError, packet::Packet}, util::channel::send};
 
 #[derive(Debug)]
 pub struct ForeignManager {
@@ -13,10 +14,10 @@ pub struct ForeignManager {
 
 impl ForeignManager {
 
-    pub fn new(connection: Connection) -> ForeignManager {
+    pub fn new(connection: Connection, packet_sender: Sender<Packet>) -> ForeignManager {
         ForeignManager {
             connection: connection.clone(),
-            _receive_handle: tokio::spawn(ForeignManager::receive(connection))
+            _receive_handle: tokio::spawn(ForeignManager::receive(connection, packet_sender))
         }
     }
 
@@ -65,10 +66,10 @@ impl ForeignManager {
         }
     }
 
-    pub async fn receive(connection: Connection) -> Res<()> {
+    pub async fn receive(connection: Connection, packet_sender: Sender<Packet>) -> Res<()> {
         
         loop {
-            let (mut send, mut recv) = match connection.accept_bi().await {
+            let (mut sender, mut receiver) = match connection.accept_bi().await {
                 Ok(v) => v,
                 _ => return Ok(())
             };
@@ -76,15 +77,17 @@ impl ForeignManager {
             let mut buffer: Vec<u8> = Vec::new();
 
             // All errors indicate failure of this transmission.
-            if recv.read(&mut buffer).await.is_err() {
-                let _ = send.finish();
+            if receiver.read(&mut buffer).await.is_err() {
+                let _ = sender.finish();
                 continue;
             }
 
             let packet = Packet::from_bytes(buffer)?;
-            send.write_all(&packet.code.to_be_bytes()).await?;
-            let _ = send.finish();
+            sender.write_all(&packet.code.to_be_bytes()).await?;
+            let _ = sender.finish();
 
+            // Send the packet off to be processed.
+            send(packet, &packet_sender).await?;
         }
 
     }
