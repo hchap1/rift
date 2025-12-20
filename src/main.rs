@@ -1,3 +1,4 @@
+mod frontend;
 mod networking;
 mod error;
 mod util;

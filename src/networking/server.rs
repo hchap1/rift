@@ -15,6 +15,7 @@ use crate::networking::foreign_manager::ForeignManager;
 use crate::networking::packet::Packet;
 use crate::util::channel::send;
 
+#[derive(Debug)]
 pub struct Local {
     endpoint: Endpoint,
     connection_manager: ConnectionManager,

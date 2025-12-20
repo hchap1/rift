@@ -18,9 +18,13 @@ type Recv = async_channel::Receiver<ConnectionManagerMessage>;
 pub enum ConnectionManagerMessage {
     Quit,
     Add(Foreign),
-    Error(Error)
+    Error(Error),
+
+    // Output
+    SuccessfulConnection(usize),
 }
 
+#[derive(Debug)]
 pub struct ConnectionManager {
     _listen_handle: JoinHandle<Res<()>>,
     _manage_handle: JoinHandle<Res<()>>,
