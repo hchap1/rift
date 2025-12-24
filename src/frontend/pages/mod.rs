@@ -10,7 +10,7 @@ Plan
 
 #[derive(Clone, Copy, Debug)]
 pub enum Pages {
-    Chat,
+    Chat(usize),
     AddChat,
     BrowseChats
 }

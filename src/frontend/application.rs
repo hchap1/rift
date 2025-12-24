@@ -34,7 +34,7 @@ impl Page for Application {
     fn view(&self) -> Container<'_, Message> {
 
         let active_page = match &self.active_page {
-            Pages::Chat => &self.chat_page,
+            Pages::Chat(_) => &self.chat_page,
             Pages::AddChat => &self.add_chat_page,
             Pages::BrowseChats => &self.browse_chats_page
         };

@@ -23,7 +23,7 @@ impl Page for BrowseChatsPage {
             Column::from_iter(self.chats.iter()
                 .map(|id|
                     button(text(id))
-                        .on_press(Global::SwitchTo(super::Pages::Chat).into())
+                        .on_press(Global::SwitchTo(super::Pages::Chat(*id)).into())
                 .into())
             )
         ))
