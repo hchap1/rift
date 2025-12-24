@@ -16,7 +16,7 @@ pub enum AddChatMessage {
 }
 
 impl Page for AddChatPage {
-    fn view(&self) -> Container<Message> {
+    fn view(&self) -> Container<'_, Message> {
         Container::new(
             Column::new()
                 .push(
@@ -40,7 +40,8 @@ impl Page for AddChatPage {
                 }
                 AddChatMessage::Submit => {
                     match EndpointId::from_str(&std::mem::take(&mut self.input)) {
-                        Ok(valid_id) => Task::done(Global::Connect(valid_id).into()),
+                        Ok(valid_id) => Task::done(Global::Connect(valid_id).into())
+                            .chain(Task::done(Global::SwitchTo(super::Pages::BrowseChats).into())),
                         Err(_) => Task::done(Global::Notify(Notification::error(String::from("Invalid ID"))).into())
                     }
                 }
