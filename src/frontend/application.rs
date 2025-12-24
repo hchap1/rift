@@ -95,6 +95,13 @@ impl Page for Application {
                     None => Task::none()
                 }
             }
+
+            Message::BrowseChatsMessage(msg) => {
+                match self.browse_chats_page.as_mut() {
+                    Some(page) => page.update(Message::BrowseChatsMessage(msg)),
+                    None => Task::none()
+                }
+            }
         }
     }
 }
