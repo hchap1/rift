@@ -3,6 +3,7 @@ use iced::widget::{Column, Container, Scrollable};
 use iced::widget::button;
 use iced::widget::text;
 
+use crate::frontend::notification::Notification;
 use crate::frontend::{application::Page, message::Message};
 use crate::frontend::message::Global;
 
@@ -31,7 +32,10 @@ impl Page for BrowseChatsPage {
     fn update(&mut self, message: Message) -> Task<Message> {
         match message {
             Message::BrowseChatsMessage(message) => match message {
-                BrowseChatsMessage::ChatConnected(id) => self.chats.push(id).into(),
+                BrowseChatsMessage::ChatConnected(id) => {
+                    self.chats.push(id);
+                    Task::done(Global::Notify(Notification::success(String::from("Connection made!"))).into())
+                }
                 BrowseChatsMessage::ChatDisconnect(id) => self.chats.retain(|x| *x != id).into()
             }
             _ => Task::none()

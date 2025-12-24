@@ -41,10 +41,11 @@ impl Local {
         })
     }
 
-    pub async fn connect(endpoint: Endpoint, sender: Sender<ConnectionManagerMessage>, packet_sender: Sender<Packet>, target: EndpointAddr) -> Res<()> {
+    pub async fn connect(endpoint: Endpoint, sender: Sender<ConnectionManagerMessage>, packet_sender: Sender<Packet>, target: EndpointAddr) -> Res<usize> {
         let foreign = Foreign::establish(endpoint, target, packet_sender).await?;
+        let id = foreign.stable_id;
         send(ConnectionManagerMessage::Add(foreign), &sender).await?;
-        Ok(())
+        Ok(id)
     }
 
     pub fn ep(&self) -> Endpoint { self.endpoint.clone() }

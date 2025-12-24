@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use iced::{Task, widget::{Container, text}};
-use crate::{frontend::{message::{Global, Message}, pages::Pages}, networking::server::Local};
+use crate::{frontend::{message::{Global, Message}, pages::{Pages, browse_chats_page::BrowseChatsMessage}}, networking::server::Local};
 use crate::frontend::notification::Notification;
 
 pub struct Application {
@@ -78,7 +78,7 @@ impl Page for Application {
                             local.ps(),
                             node_id.into()
                         )).map(|res| match res {
-                            Ok(_) => Global::Notify(Notification::success(String::from("Connection made!"))).into(),
+                            Ok(id) => BrowseChatsMessage::ChatConnected(id).into(),
                             Err(error) => Global::Notify(error.into()).into()
                         })
                     }

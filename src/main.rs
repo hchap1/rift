@@ -1,3 +1,5 @@
+#![allow(clippy::unit_arg)]
+
 mod frontend;
 mod networking;
 mod error;
