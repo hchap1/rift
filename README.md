@@ -1,2 +1,2 @@
-# iroh-ftp-gui
-Rust application built with ICED running on IROH to transfer files cross-internet.
+# RIFT
+Rust project aiming to simple and secure p2p connection, built on QUIC with IROH.
