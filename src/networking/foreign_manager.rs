@@ -79,6 +79,8 @@ impl ForeignManager {
                 _ => return Ok(())
             };
 
+            println!("Accepted new BD channel!");
+
             let mut buffer: Vec<u8> = Vec::new();
 
             // All errors indicate failure of this transmission.
@@ -87,9 +89,13 @@ impl ForeignManager {
                 continue;
             }
 
+            println!("Successfully read packet!");
+
             let packet = Packet::from_bytes(buffer)?;
             sender.write_all(&packet.code.to_be_bytes()).await?;
             let _ = sender.finish();
+
+            println!("Packet! {packet:?}");
 
             // Send the packet off to be processed, alongside this connection id.
             send((author, packet), &packet_sender).await?;
