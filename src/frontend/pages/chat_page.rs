@@ -90,6 +90,7 @@ impl Page for ChatPage {
                     let packet = Packet::message(message);
                     Task::batch(vec![
                         Task::done(Global::Send(self.active_chat, packet.clone()).into()),
+                        // TODO ensure this is red until confirmed by code
                         Task::done(ChatMessage::SentLocalPacket(self.active_chat, packet).into())
                     ])
                 }
