@@ -17,8 +17,8 @@ pub trait Page {
     fn view(&self) -> Container<'_, Message>;
 }
 
-impl Application {
-    pub fn new() -> Application {
+impl Default for Application {
+    fn default() -> Application {
         Application {
             networking: None,
             active_page: Pages::BrowseChats,
@@ -127,8 +127,13 @@ impl Page for Application {
                     }.into())
                 }
 
-                Global::None => Task::none(),
-                _ => Task::none()
+                Global::Notify(notification) => {
+                    println!("NOTIFICATION: {notification:?}");
+                    self.notification_stack.push(notification);
+                    Task::none()
+                }
+
+                Global::None => Task::none()
             }
 
             Message::AddChatMessage(msg) => {

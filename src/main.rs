@@ -6,20 +6,9 @@ mod networking;
 mod error;
 mod util;
 
-/*
-    Plan
+use crate::frontend::application::Page;
+use crate::frontend::application::Application;
 
-    - Database
-        - Stores message logs
-        - Stores node address of THIS node
-        - Stores node addresses of previously messaged clients
-        - Associate username with client
-    - Networking
-        - Receive confirmation for each message
-        - Each message must contain the timestamp at which it was sent
-    - GUI
-*/
-
-fn main() {
-    println!("Hello, world!");
+fn main() -> iced::Result {
+    iced::run(Application::update, Application::view)
 }
