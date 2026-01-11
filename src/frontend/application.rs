@@ -127,6 +127,7 @@ impl Page for Application {
 
                 // Originating point of incoming packets from the relay above.
                 Global::Packet(author, packet) => {
+                    println!("Global::Packet received packet!");
                     Task::done(ChatMessage::ReceiveForeignPacket(author, packet).into())
                 }
 

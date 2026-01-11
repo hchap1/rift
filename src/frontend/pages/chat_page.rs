@@ -66,7 +66,7 @@ impl Page for ChatPage {
 
                 // Message to record an incoming message. This is the only interface through which the user can see a message.
                 ChatMessage::ReceiveForeignPacket(author, packet) => match self.add_packet(author, false, packet) {
-                    Ok(value) => value.into(),
+                    Ok(()) => println!("Received packet into the GUI!").into(),
                     Err(error) => Task::done(Global::Notify(error.into()).into())
                 },
 

@@ -81,31 +81,22 @@ impl ForeignManager {
                 _ => return Ok(())
             };
 
-            println!("Accepted new BD channel!");
-            /*
 
-            let mut buffer: Vec<u8> = Vec::new();
+            let buffer = match receiver.read_to_end(10000000).await {
+                Ok(buffer) => buffer,
 
-            match receiver.read(&mut buffer).await {
-                Ok(_) => {},
-                Err(e) => {
-                    println!("ERROR!: {e:?}");
-                    let _ = sender.finish();
+                // All errors indicate failure.
+                Err(_) => {
+                    sender.finish()?;
                     continue;
                 }
-            }
-            */
+            };
 
-            let buffer = receiver.read_to_end(100000).await.unwrap();
-
-            println!("Successfully read packet!");
             let packet = Packet::from_bytes(buffer)?;
-            println!("Packet! {packet:?}");
             sender.write_all(&packet.code.to_be_bytes()).await?;
-            println!("Response echoed!");
             let _ = sender.finish();
-            println!("channel finished");
 
+            println!("Sending the packet to frontend!");
 
             // Send the packet off to be processed, alongside this connection id.
             send((author, packet), &packet_sender).await?;
