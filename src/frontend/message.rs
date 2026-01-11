@@ -44,7 +44,7 @@ pub enum Global {
 
         // Interface with backend
         Send(usize, Packet),
-        Packet(usize, Packet),
+        Packet(usize, Packet),                     // When a new packet is received, this is the first message prior to it being relayed to page specific needs.
         Connect(EndpointId),
 }
 

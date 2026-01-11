@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use iced::{Task, widget::{Container, text}};
-use crate::{frontend::{message::{Global, Message}, pages::{Pages, add_chat_page::AddChatPage, browse_chats_page::{BrowseChatsMessage, BrowseChatsPage}, chat_page::ChatPage}}, networking::{connection_manager::ConnectionManagerMessage, server::Local}, util::relay::Relay};
+use crate::{frontend::{message::{Global, Message}, pages::{Pages, add_chat_page::AddChatPage, browse_chats_page::{BrowseChatsMessage, BrowseChatsPage}, chat_page::{ChatMessage, ChatPage}}}, networking::{connection_manager::ConnectionManagerMessage, server::Local}, util::relay::Relay};
 use crate::frontend::notification::Notification;
 
 pub struct Application {
@@ -71,13 +71,17 @@ impl Page for Application {
 
                 // Initiate a connection. Upon success, backend will inform frontend of the connection.
                 Global::Connect(node_id) => match self.networking.as_ref() {
+
                     Some(local) => {
+                        // Spawn a future that will attempt to connect with a client.
+                        // Must carry clones of all channels due to ownership conflicts.
                         Task::future(Local::connect(
                             local.ep(),
                             local.cs(),
                             local.ps(),
                             node_id.into()
                         )).map(|res| match res {
+                            // Upon success, counterintuitively do not track the new ID. Rather, rely on the backend to process the connection and relay it back.
                             Ok(id) => Global::Notify(Notification::success(format!("Connection success! ID: {id}"))),
                             Err(error) => Global::Notify(error.into()),
                         }.into())
@@ -103,8 +107,12 @@ impl Page for Application {
 
                     // Generate a relay converting incoming packets into frontend messages.
                     let new_packet_stream = Task::stream(Relay::consume_receiver(packet_receiver, |(author, packet)| Some(Global::Packet(author, packet).into())));
-
                     Task::batch(vec![new_connection_stream, new_packet_stream])
+                }
+
+                // Originating point of incoming packets from the relay above.
+                Global::Packet(author, packet) => {
+                    Task::done(ChatMessage::ReceiveForeignPacket(packet).into())
                 }
 
                 Global::None => Task::none(),

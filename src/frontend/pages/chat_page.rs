@@ -6,8 +6,8 @@ use crate::{backend::chat::Chat, error::{ChatError, Res}, frontend::{application
 
 #[derive(Debug, Clone)]
 pub enum ChatMessage {
-    ReceiveForeignPacket(Packet),
-    SentLocalPacket(Packet)
+    ReceiveForeignPacket(usize, Packet),
+    SentLocalPacket(usize, Packet)
 }
 
 #[derive(Default)]
@@ -17,8 +17,9 @@ pub struct ChatPage {
 }
 
 impl ChatPage {
-    fn add_packet(&mut self, local: bool, packet: Packet) -> Res<()> {
-        match self.chats.get_mut(&self.active_chat) {
+    /// Function to record a packet exchange into the GUI.
+    fn add_packet(&mut self, foreign_stable_id: usize, local: bool, packet: Packet) -> Res<()> {
+        match self.chats.get_mut(&foreign_stable_id) {
             Some(chat) => Ok(chat.add_packet(local, packet)),
             None => Err(ChatError::NoChatOpen.into())
         }
@@ -39,12 +40,17 @@ impl Page for ChatPage {
 
     fn update(&mut self, message: Message) -> Task<Message> {
         match message {
+
             Message::ChatMessage(message) => match message {
-                ChatMessage::ReceiveForeignPacket(packet) => match self.add_packet(false, packet) {
+
+                // Message to record an incoming message. This is the only interface through which the user can see a message.
+                ChatMessage::ReceiveForeignPacket(author, packet) => match self.add_packet(author, false, packet) {
                     Ok(value) => value.into(),
                     Err(error) => Task::done(Global::Notify(error.into()).into())
                 },
-                ChatMessage::SentLocalPacket(packet) => match self.add_packet(true, packet) {
+
+                // Identical to ReceiveForeignPacket but idiomatically this is where packets locally initiated are sent to be displayed.
+                ChatMessage::SentLocalPacket(recipient, packet) => match self.add_packet(recipient, true, packet) {
                     Ok(value) => value.into(),
                     Err(error) => Task::done(Global::Notify(error.into()).into())
                 }
