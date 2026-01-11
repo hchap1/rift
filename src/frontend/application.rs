@@ -112,7 +112,7 @@ impl Page for Application {
 
                 // Originating point of incoming packets from the relay above.
                 Global::Packet(author, packet) => {
-                    Task::done(ChatMessage::ReceiveForeignPacket(packet).into())
+                    Task::done(ChatMessage::ReceiveForeignPacket(author, packet).into())
                 }
 
                 Global::None => Task::none(),
