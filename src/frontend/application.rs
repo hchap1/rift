@@ -125,6 +125,7 @@ impl Page for Application {
                 }
 
                 Global::Send(stable_id, packet) => {
+                    println!("OUTGOING PACKET TO {stable_id}");
                     let connection_manager_sender = match self.networking.as_mut() {
                         Some(local) => local.cs(),
                         None => return Task::done(Global::Error(ChatError::NetworkingBackendFailedToInitialise.into()).into())

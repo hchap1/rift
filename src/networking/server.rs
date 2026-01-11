@@ -94,6 +94,7 @@ impl Foreign {
     }
 
     pub async fn distribute(&self, packet: Packet) -> Res<bool> {
+        println!("DISTRIBUTING PACKET!");
         let connection = self.foreign_manager.clone_connection();
         ForeignManager::send_task(connection, packet).await
     }
