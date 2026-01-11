@@ -69,6 +69,7 @@ impl Page for Application {
                     Task::none()
                 }
 
+                // Initiate a connection. Upon success, backend will inform frontend of the connection.
                 Global::Connect(node_id) => match self.networking.as_ref() {
                     Some(local) => {
                         Task::future(Local::connect(
@@ -77,26 +78,30 @@ impl Page for Application {
                             local.ps(),
                             node_id.into()
                         )).map(|res| match res {
-                            Ok(id) => BrowseChatsMessage::ChatConnected(id).into(),
-                            Err(error) => Global::Notify(error.into()).into()
-                        })
+                            Ok(id) => Global::Notify(Notification::success(format!("Connection success! ID: {id}"))),
+                            Err(error) => Global::Notify(error.into()),
+                        }.into())
                     }
                     None => Task::done(Global::Notify(Notification::error(String::from("Networking not initialised."))).into())
                 }
 
                 // The networking backend was successfully established.
-                // Therefore, create a Relay mapping new connections into the frontend.
                 Global::LoadSuccess(local) => {
+
+                    // Establish receiver clones for backend outputs.
                     let output_receiver = local.yield_output();
                     let packet_receiver = local.yield_packet_output();
                     self.networking = Some(local);
                     
+                    // Generate a relay converting new connections / errors into frontend messages.
+                    // This will occur for foreign and locally initiated connections.
                     let new_connection_stream = Task::stream(Relay::consume_receiver(output_receiver, |message| match message {
                         ConnectionManagerMessage::SuccessfulConnection(stable_id) => Some(BrowseChatsMessage::ChatConnected(stable_id).into()),
                         ConnectionManagerMessage::Error(error) => Some(Global::Error(error).into()),
                         _ => Some(Message::Global(Global::None))
                     }));
 
+                    // Generate a relay converting incoming packets into frontend messages.
                     let new_packet_stream = Task::stream(Relay::consume_receiver(packet_receiver, |(author, packet)| Some(Global::Packet(author, packet).into())));
 
                     Task::batch(vec![new_connection_stream, new_packet_stream])
