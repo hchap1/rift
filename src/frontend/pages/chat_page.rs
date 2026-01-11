@@ -10,6 +10,7 @@ pub enum ChatMessage {
     SentLocalPacket(Packet)
 }
 
+#[derive(Default)]
 pub struct ChatPage {
     active_chat: usize,
     chats: HashMap<usize, Chat>

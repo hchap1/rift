@@ -5,6 +5,7 @@ use iroh::EndpointId;
 
 use crate::frontend::{application::Page, message::{Global, Message}, notification::Notification};
 
+#[derive(Default)]
 pub struct AddChatPage {
     input: String
 }

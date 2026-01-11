@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use iced::{Task, widget::{Container, text}};
-use crate::{frontend::{message::{Global, Message}, pages::{Pages, browse_chats_page::BrowseChatsMessage}}, networking::server::Local};
+use crate::{frontend::{message::{Global, Message}, pages::{Pages, add_chat_page::AddChatPage, browse_chats_page::{BrowseChatsMessage, BrowseChatsPage}, chat_page::ChatPage}}, networking::server::Local};
 use crate::frontend::notification::Notification;
 
 pub struct Application {
@@ -22,9 +22,9 @@ impl Application {
         Application {
             networking: None,
             active_page: Pages::BrowseChats,
-            chat_page: None,
-            add_chat_page: None,
-            browse_chats_page: None,
+            chat_page: Some(Box::new(ChatPage::default())),
+            add_chat_page: Some(Box::new(AddChatPage::default())),
+            browse_chats_page: Some(Box::new(BrowseChatsPage::default())),
             notification_stack: vec![],
         }
     }
@@ -99,6 +99,13 @@ impl Page for Application {
             Message::BrowseChatsMessage(msg) => {
                 match self.browse_chats_page.as_mut() {
                     Some(page) => page.update(Message::BrowseChatsMessage(msg)),
+                    None => Task::none()
+                }
+            }
+
+            Message::ChatMessage(msg) => {
+                match self.chat_page.as_mut() {
+                    Some(page) => page.update(Message::ChatMessage(msg)),
                     None => Task::none()
                 }
             }

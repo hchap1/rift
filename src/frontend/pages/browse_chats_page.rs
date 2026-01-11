@@ -13,6 +13,7 @@ pub enum BrowseChatsMessage {
     ChatDisconnect(usize)
 }
 
+#[derive(Default)]
 pub struct BrowseChatsPage {
     chats: Vec<usize>,
 }
