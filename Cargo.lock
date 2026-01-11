@@ -2375,6 +2375,7 @@ dependencies = [
  "async-channel",
  "iced",
  "iroh",
+ "pin-project",
  "tokio",
 ]
 
