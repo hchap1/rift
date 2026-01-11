@@ -2,3 +2,4 @@ pub mod application;
 pub mod message;
 pub mod pages;
 pub mod notification;
+pub mod widget;

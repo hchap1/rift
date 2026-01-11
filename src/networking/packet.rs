@@ -1,6 +1,6 @@
 use crate::{error::{Error, Res}, networking::error::NetworkError};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PacketType {
     Username,
     Message
@@ -23,7 +23,7 @@ impl PacketType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Packet {
     pub kind: PacketType,
     pub code: u32,
