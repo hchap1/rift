@@ -90,9 +90,7 @@ impl ForeignManager {
             }
 
             println!("Successfully read packet!");
-
             let packet = Packet::from_bytes(buffer)?;
-
             println!("Packet! {packet:?}");
             sender.write_all(&packet.code.to_be_bytes()).await?;
             println!("Response echoed!");

@@ -34,9 +34,12 @@ pub struct Packet {
 
 impl Packet {
     pub fn from_bytes(bytes: Vec<u8>) -> Res<Packet> {
+        println!("Received bytes: {bytes:?}");
         let mut iterator = bytes.into_iter();
         let kind_byte = iterator.next().ok_or(NetworkError::InvalidPacket)?;
+        println!("Successful found kind_byte: {kind_byte}");
         let kind = PacketType::from_byte(kind_byte)?;
+        println!("Associated with type: {kind:?}");
 
         let endians = [
             iterator.next().ok_or(NetworkError::InvalidPacket)?,
@@ -44,6 +47,8 @@ impl Packet {
             iterator.next().ok_or(NetworkError::InvalidPacket)?,
             iterator.next().ok_or(NetworkError::InvalidPacket)?
         ];
+
+        println!("Parsed endians: {endians:?}");
 
         let code = u32::from_be_bytes(endians);
         let data = iterator.collect();
