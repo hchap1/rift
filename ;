@@ -121,10 +121,7 @@ impl Page for Application {
                         None => return Task::done(Global::Error(ChatError::NetworkingBackendFailedToInitialise.into()).into())
                     };
 
-                    Task::future(Local::send_packet_to(connection_manager_sender, stable_id, packet)).map(|res| match res {
-                        Ok(_) => Global::None,
-                        Err(error) => Global::Error(error)
-                    }.into())
+                    Task::future(Local::send_packet_to(connection_manager_sender, stable_id, packet))
                 }
 
                 Global::None => Task::none(),

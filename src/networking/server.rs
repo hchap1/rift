@@ -58,6 +58,13 @@ impl Local {
     /// Get a clone of the connection manager output receiver to be used with the frontend.
     /// This reports events such as errors or succesful connections, foreign and locally initiated.
     pub fn yield_output(&self) -> Receiver<ConnectionManagerMessage> { self.connection_manager.yield_output() }
+
+    /// Send a request through to a ForeignManager by ID to relay a packet through a new bi-directional stream.
+    /// (Send a packet to a given stable_id)
+    pub async fn send_packet_to(sender: Sender<ConnectionManagerMessage>, stable_id: usize, packet: Packet) -> Res<()> {
+        send(ConnectionManagerMessage::Message(stable_id, packet), &sender).await?;
+        Ok(())
+    }
 }
 
 #[derive(Clone, Debug)]

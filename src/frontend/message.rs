@@ -43,7 +43,7 @@ pub enum Global {
         LoadSuccess(Arc<Local>),
 
         // Interface with backend
-        Send(usize, Packet),
+        Send(usize, Packet),                       // Send a packet to the given stable_id, requires a Connection to the foreign node to exist already.
         Packet(usize, Packet),                     // When a new packet is received, this is the first message prior to it being relayed to page specific needs.
         Connect(EndpointId),
 }

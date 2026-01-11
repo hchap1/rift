@@ -34,7 +34,8 @@ macro_rules! error_enum {
 #[derive(Clone, Debug)]
 pub enum ChatError {
     NoChatOpen,
-    InvalidCode
+    InvalidCode,
+    NetworkingBackendFailedToInitialise
 }
 
 #[derive(Debug, Clone)]
