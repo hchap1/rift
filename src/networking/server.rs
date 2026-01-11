@@ -51,6 +51,12 @@ impl Local {
     pub fn ep(&self) -> Endpoint { self.endpoint.clone() }
     pub fn cs(&self) -> Sender<ConnectionManagerMessage> { self.connection_manager.yield_sender() }
     pub fn ps(&self) -> Sender<Packet> { self.packet_sender.clone() }
+    
+    /// Get a clone of the packet output receiver to be used with the frontend.
+    pub fn yield_packet_output(&self) -> Receiver<Packet> { self.packet_receiver.clone() }
+
+    /// Get a clone of the connection manager output receiver to be used with the frontend.
+    /// This reports events such as errors or succesful connections, foreign and locally initiated.
     pub fn yield_output(&self) -> Receiver<ConnectionManagerMessage> { self.connection_manager.yield_output() }
 }
 
