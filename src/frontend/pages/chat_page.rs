@@ -1,6 +1,6 @@
 use std::{collections::HashMap, mem::take};
 
-use iced::{Task, widget::{Column, Container, Scrollable, text_input}};
+use iced::{Length, Task, widget::{Column, Container, Scrollable, text_input}};
 
 use crate::{backend::chat::Chat, error::Res, frontend::{application::Page, message::{Global, Message}}, networking::packet::Packet};
 
@@ -42,18 +42,19 @@ impl ChatPage {
 impl Page for ChatPage {
     fn view(&self) -> Container<'_, Message> {
         Container::new(
-            Column::new()
+            Column::new().height(Length::Fill)
                 .push(
                     Scrollable::new(
                         match self.chats.get(&self.active_chat) {
                             Some(chat) => chat.view(String::from("FOREIGN"), String::from("LOCAL")),
                             None => Column::new()
                         }
-                    )
+                    ).height(Length::FillPortion(10)).width(Length::FillPortion(1))
                 ).push(
                     text_input(&format!("Message {}", self.active_chat), &self.message_box)
                         .on_input_maybe(Some(|new_value| ChatMessage::UpdateMessageBox(new_value).into()))
                         .on_submit(ChatMessage::Send.into())
+                        .size(32)
                 )
         )
     }
