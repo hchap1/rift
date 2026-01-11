@@ -1,10 +1,10 @@
 use std::sync::Arc;
 use iced::{Task, widget::{Container, text}};
-use crate::{frontend::{message::{Global, Message}, pages::{Pages, add_chat_page::AddChatPage, browse_chats_page::{BrowseChatsMessage, BrowseChatsPage}, chat_page::ChatPage}}, networking::server::Local};
+use crate::{frontend::{message::{Global, Message}, pages::{Pages, add_chat_page::AddChatPage, browse_chats_page::{BrowseChatsMessage, BrowseChatsPage}, chat_page::ChatPage}}, networking::{connection_manager::ConnectionManagerMessage, server::Local}, util::relay::Relay};
 use crate::frontend::notification::Notification;
 
 pub struct Application {
-    networking: Option<Local>,
+    networking: Option<Arc<Local>>,
     active_page: Pages,
     chat_page: Option<Box<dyn Page>>,
     add_chat_page: Option<Box<dyn Page>>,
@@ -61,8 +61,7 @@ impl Page for Application {
                     }),
 
                 Global::Error(error) => {
-                    eprintln!("Error: {error:?}");
-                    Task::none()
+                    Task::done(Global::Notify(error.into()).into())
                 }
 
                 Global::SwitchTo(page) => {
@@ -83,6 +82,18 @@ impl Page for Application {
                         })
                     }
                     None => Task::done(Global::Notify(Notification::error(String::from("Networking not initialised."))).into())
+                }
+
+                // The networking backend was successfully established.
+                // Therefore, create a Relay mapping new connections into the frontend.
+                Global::LoadSuccess(local) => {
+                    let output = local.yield_output();
+                    self.networking = Some(local);
+                    Task::stream(Relay::consume_receiver(output, |message| match message {
+                        ConnectionManagerMessage::SuccessfulConnection(stable_id) => Some(BrowseChatsMessage::ChatConnected(stable_id).into()),
+                        ConnectionManagerMessage::Error(error) => Some(Global::Error(error).into()),
+                        _ => Some(Message::Global(Global::None))
+                    }))
                 }
 
                 Global::None => Task::none(),

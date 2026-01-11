@@ -71,7 +71,10 @@ impl ConnectionManager {
         while let Ok(task) = receiver.recv().await {
             match task {
                 ConnectionManagerMessage::Quit => return Ok(()),
-                ConnectionManagerMessage::Add(connection) => { let _ = connections.insert(connection.stable_id(), connection); },
+                ConnectionManagerMessage::Add(connection) => {
+                    send(ConnectionManagerMessage::SuccessfulConnection(connection.stable_id()), &sender).await;
+                    let _ = connections.insert(connection.stable_id(), connection);
+                },
                 error => send(error, &sender).await?
             }
         }
@@ -81,5 +84,9 @@ impl ConnectionManager {
 
     pub fn yield_sender(&self) -> Send {
         self.sender_to_thread.clone()
+    }
+
+    pub fn yield_output(&self) -> Recv {
+        self.output.clone()
     }
 }
