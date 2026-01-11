@@ -1,19 +1,26 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, mem::take};
 
-use iced::{Task, widget::{Column, Container, Scrollable}};
+use iced::{Task, widget::{Column, Container, Scrollable, text_input}};
 
 use crate::{backend::chat::Chat, error::{ChatError, Res}, frontend::{application::Page, message::{Global, Message}, notification::Notification}, networking::packet::Packet};
 
 #[derive(Debug, Clone)]
 pub enum ChatMessage {
     ReceiveForeignPacket(usize, Packet),
-    SentLocalPacket(usize, Packet)
+    SentLocalPacket(usize, Packet),
+
+    // Update the message box (paste, type)
+    UpdateMessageBox(String),
+
+    // Send the current message box contents to the current chat
+    Send
 }
 
 #[derive(Default)]
 pub struct ChatPage {
     active_chat: usize,
-    chats: HashMap<usize, Chat>
+    chats: HashMap<usize, Chat>,
+    message_box: String
 }
 
 impl ChatPage {
@@ -29,12 +36,19 @@ impl ChatPage {
 impl Page for ChatPage {
     fn view(&self) -> Container<'_, Message> {
         Container::new(
-            Scrollable::new(
-                match self.chats.get(&self.active_chat) {
-                    Some(chat) => chat.view(String::from("FOREIGN"), String::from("LOCAL")),
-                    None => Column::new()
-                }
-            )
+            Column::new()
+                .push(
+                    Scrollable::new(
+                        match self.chats.get(&self.active_chat) {
+                            Some(chat) => chat.view(String::from("FOREIGN"), String::from("LOCAL")),
+                            None => Column::new()
+                        }
+                    )
+                ).push(
+                    text_input(&format!("Message {}", self.active_chat), &self.message_box)
+                        .on_input_maybe(Some(|new_value| ChatMessage::UpdateMessageBox(new_value).into()))
+                        .on_submit(ChatMessage::Send.into())
+                )
         )
     }
 
@@ -53,6 +67,16 @@ impl Page for ChatPage {
                 ChatMessage::SentLocalPacket(recipient, packet) => match self.add_packet(recipient, true, packet) {
                     Ok(value) => value.into(),
                     Err(error) => Task::done(Global::Notify(error.into()).into())
+                },
+
+                // Update the message box
+                ChatMessage::UpdateMessageBox(new_value) => (self.message_box = new_value).into(),
+
+                // Send the current contents of the message box to the current chat
+                ChatMessage::Send => {
+                    let message = take(&mut self.message_box);
+                    let packet = Packet::message(message);
+                    Task::done(Global::Send(self.active_chat, packet).into())
                 }
             },
             _ => Task::none()

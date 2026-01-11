@@ -1,4 +1,6 @@
-use crate::{error::{Error, Res}, networking::error::NetworkError};
+use rand::{Rng, rng};
+
+use crate::{error::Res, networking::error::NetworkError};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PacketType {
@@ -61,5 +63,17 @@ impl Packet {
             endians,
             self.data
         ].into_iter().flatten().collect()
+    }
+
+    pub fn message(message: String) -> Self {
+
+        let mut rng = rng();
+        let code = rng.random_range(u32::MIN..=u32::MAX);
+
+        Packet {
+            kind: PacketType::Message,
+            code,
+            data: message.into_bytes()
+        }
     }
 }
