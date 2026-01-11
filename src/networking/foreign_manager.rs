@@ -93,7 +93,8 @@ impl ForeignManager {
             };
 
             let packet = Packet::from_bytes(buffer)?;
-            sender.write_all(&packet.code.to_be_bytes()).await?;
+            // TODO fix this
+            // sender.write_all(&packet.code.to_be_bytes()).await?;
             let _ = sender.finish();
 
             println!("Sending the packet to frontend!");
