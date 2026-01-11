@@ -92,10 +92,13 @@ impl ForeignManager {
             println!("Successfully read packet!");
 
             let packet = Packet::from_bytes(buffer)?;
-            sender.write_all(&packet.code.to_be_bytes()).await?;
-            let _ = sender.finish();
 
             println!("Packet! {packet:?}");
+            sender.write_all(&packet.code.to_be_bytes()).await?;
+            println!("Response echoed!");
+            let _ = sender.finish();
+            println!("channel finished");
+
 
             // Send the packet off to be processed, alongside this connection id.
             send((author, packet), &packet_sender).await?;
