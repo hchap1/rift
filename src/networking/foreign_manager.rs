@@ -31,7 +31,9 @@ impl ForeignManager {
         // Cache the security code
         let expected_reply = packet.code;
         // Write all the bytes into the stream before closing it, idiomatically signalling the end of this discrete packet.
-        send.write_all(&packet.to_bytes()).await?;
+        let bytes = &packet.to_bytes();
+        println!("Created bytes: {bytes:?}");
+        send.write_all(bytes).await?;
         send.finish()?;
 
         // Create a buffer to accept the verification code.
@@ -80,6 +82,7 @@ impl ForeignManager {
             };
 
             println!("Accepted new BD channel!");
+            /*
 
             let mut buffer: Vec<u8> = Vec::new();
 
@@ -91,6 +94,9 @@ impl ForeignManager {
                     continue;
                 }
             }
+            */
+
+            let buffer = receiver.read_to_end(100000).await.unwrap();
 
             println!("Successfully read packet!");
             let packet = Packet::from_bytes(buffer)?;
