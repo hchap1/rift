@@ -31,6 +31,8 @@ impl Local {
             .bind()
             .await?;
 
+        println!("ENDPOINT: {}", endpoint.addr().id);
+
         let (packet_sender, packet_receiver) = unbounded();
 
         Ok(Local {
