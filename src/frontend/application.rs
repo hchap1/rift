@@ -87,13 +87,19 @@ impl Page for Application {
                 // The networking backend was successfully established.
                 // Therefore, create a Relay mapping new connections into the frontend.
                 Global::LoadSuccess(local) => {
-                    let output = local.yield_output();
+                    let output_receiver = local.yield_output();
+                    let packet_receiver = local.yield_packet_output();
                     self.networking = Some(local);
-                    Task::stream(Relay::consume_receiver(output, |message| match message {
+                    
+                    let new_connection_stream = Task::stream(Relay::consume_receiver(output_receiver, |message| match message {
                         ConnectionManagerMessage::SuccessfulConnection(stable_id) => Some(BrowseChatsMessage::ChatConnected(stable_id).into()),
                         ConnectionManagerMessage::Error(error) => Some(Global::Error(error).into()),
                         _ => Some(Message::Global(Global::None))
-                    }))
+                    }));
+
+                    let new_packet_stream = Task::stream(Relay::consume_receiver(packet_receiver, |(author, packet)| Some(Global::Packet(author, packet).into())));
+
+                    Task::batch(vec![new_connection_stream, new_packet_stream])
                 }
 
                 Global::None => Task::none(),
