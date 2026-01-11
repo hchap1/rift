@@ -21,7 +21,7 @@ impl Default for Application {
     fn default() -> Application {
         Application {
             networking: None,
-            active_page: Pages::BrowseChats,
+            active_page: Pages::AddChat,
             chat_page: Some(Box::new(ChatPage::default())),
             add_chat_page: Some(Box::new(AddChatPage::default())),
             browse_chats_page: Some(Box::new(BrowseChatsPage::default())),
