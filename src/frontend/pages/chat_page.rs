@@ -2,7 +2,7 @@ use std::{collections::HashMap, mem::take};
 
 use iced::{Task, widget::{Column, Container, Scrollable, text_input}};
 
-use crate::{backend::chat::Chat, error::{ChatError, Res}, frontend::{application::Page, message::{Global, Message}, notification::Notification}, networking::packet::Packet};
+use crate::{backend::chat::Chat, error::Res, frontend::{application::Page, message::{Global, Message}}, networking::packet::Packet};
 
 #[derive(Debug, Clone)]
 pub enum ChatMessage {
@@ -88,7 +88,10 @@ impl Page for ChatPage {
                 ChatMessage::Send => {
                     let message = take(&mut self.message_box);
                     let packet = Packet::message(message);
-                    Task::done(Global::Send(self.active_chat, packet).into())
+                    Task::batch(vec![
+                        Task::done(Global::Send(self.active_chat, packet.clone()).into()),
+                        Task::done(ChatMessage::SentLocalPacket(self.active_chat, packet).into())
+                    ])
                 }
             },
             _ => Task::none()

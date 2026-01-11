@@ -36,6 +36,8 @@ impl ForeignManager {
         send.write_all(bytes).await?;
         send.finish()?;
 
+        // TODO make the message only appear once verified that it was received. Else it will be red indicating it wasnt sent
+
         // Create a buffer to accept the verification code.
         let mut buffer: Vec<u8> = Vec::new();
         Ok(match tokio::time::timeout(Duration::from_secs(5), recv.read(&mut buffer)).await {
