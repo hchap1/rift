@@ -8,6 +8,12 @@ pub struct Chat {
 }
 
 impl Chat {
+    pub fn new() -> Chat {
+        Chat {
+            packets: Vec::default()
+        }
+    }
+
     pub fn view(&self, foreign: String, local: String) -> Column<'_, Message> {
         Column::from_iter(
             self.packets.iter().map(|(is_local, packet)| {

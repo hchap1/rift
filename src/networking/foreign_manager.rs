@@ -97,8 +97,6 @@ impl ForeignManager {
             // sender.write_all(&packet.code.to_be_bytes()).await?;
             let _ = sender.finish();
 
-            println!("Sending the packet to frontend!");
-
             // Send the packet off to be processed, alongside this connection id.
             send((author, packet), &packet_sender).await?;
         }

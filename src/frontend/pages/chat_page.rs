@@ -29,7 +29,12 @@ impl ChatPage {
     fn add_packet(&mut self, foreign_stable_id: usize, local: bool, packet: Packet) -> Res<()> {
         match self.chats.get_mut(&foreign_stable_id) {
             Some(chat) => Ok(chat.add_packet(local, packet)),
-            None => Err(ChatError::NoChatOpen.into())
+            None => {
+                let mut chat = Chat::new();
+                chat.add_packet(local, packet);
+                self.chats.insert(foreign_stable_id, chat);
+                Ok(())
+            }
         }
     }
 }
