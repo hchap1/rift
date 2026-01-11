@@ -83,4 +83,9 @@ impl Foreign {
     pub fn stable_id(&self) -> usize {
         self.stable_id
     }
+
+    pub async fn distribute(&self, packet: Packet) -> Res<bool> {
+        let connection = self.foreign_manager.clone_connection();
+        ForeignManager::send_task(connection, packet).await
+    }
 }

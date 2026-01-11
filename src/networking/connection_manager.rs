@@ -5,6 +5,7 @@ use async_channel::unbounded;
 use iroh::Endpoint;
 use tokio::task::JoinHandle;
 
+use crate::error::ChatError;
 use crate::error::Error;
 use crate::error::Res;
 use crate::networking::packet::Packet;
@@ -22,7 +23,13 @@ pub enum ConnectionManagerMessage {
 
     // Output
     SuccessfulConnection(usize),
+
+    // Message
+    Message(usize, Packet)                  // Signal the management thread to find a client with this stable_id and distribute the packet to it.
 }
+
+#[derive(Debug, Clone)]
+pub enum Distribution {}
 
 #[derive(Debug)]
 pub struct ConnectionManager {
@@ -75,6 +82,14 @@ impl ConnectionManager {
                     send(ConnectionManagerMessage::SuccessfulConnection(connection.stable_id()), &sender).await?;
                     let _ = connections.insert(connection.stable_id(), connection);
                 },
+                ConnectionManagerMessage::Message(stable_id, packet) => {
+                    if let Some(foreign) = connections.get(&stable_id) {
+                        match foreign.distribute(packet).await {
+                            Ok(is_valid) => if !is_valid { send(ConnectionManagerMessage::Error(ChatError::InvalidCode.into()), &sender).await? },
+                            Err(error) => send(ConnectionManagerMessage::Error(error), &sender).await?
+                        }
+                    }
+                }
                 error => send(error, &sender).await?
             }
         }

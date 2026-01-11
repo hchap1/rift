@@ -33,7 +33,8 @@ macro_rules! error_enum {
 
 #[derive(Clone, Debug)]
 pub enum ChatError {
-    NoChatOpen
+    NoChatOpen,
+    InvalidCode
 }
 
 #[derive(Debug, Clone)]

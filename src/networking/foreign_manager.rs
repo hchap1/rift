@@ -24,46 +24,47 @@ impl ForeignManager {
     /// Establish a bi-directional channel through which the message can be streamed.
     /// Ok(bool) represents the message being sent correctly, and the boolean indicates whether a confirmation was received.
     /// This function yields a future that must be executed.
-    pub fn send_task(&self, packet: Packet) -> impl std::future::Future<Output = Res<bool>> {
-        let connection = self.connection.clone();
+    pub async fn send_task(connection: Connection, packet: Packet) -> Res<bool> {
 
-        async move {
-            let (mut send, mut recv) = connection.open_bi().await?;
-            let expected_reply = packet.code;
-            send.write_all(&packet.to_bytes()).await?;
-            send.finish()?;
+        // Open a bi-directional channel to the targetted connection (usually a clone)
+        let (mut send, mut recv) = connection.open_bi().await?;
+        // Cache the security code
+        let expected_reply = packet.code;
+        // Write all the bytes into the stream before closing it, idiomatically signalling the end of this discrete packet.
+        send.write_all(&packet.to_bytes()).await?;
+        send.finish()?;
 
-            let mut buffer: Vec<u8> = Vec::new();
-            Ok(match tokio::time::timeout(Duration::from_secs(5), recv.read(&mut buffer)).await {
-                Ok(read_result) => match read_result {
-                    Ok(read_option) => match read_option {
-                        Some(_bytes_read) => {
-                            if buffer.len() == 4 {
-                                let mut iterator = buffer.into_iter();
+        // Create a buffer to accept the verification code.
+        let mut buffer: Vec<u8> = Vec::new();
+        Ok(match tokio::time::timeout(Duration::from_secs(5), recv.read(&mut buffer)).await {
+            Ok(read_result) => match read_result {
+                Ok(read_option) => match read_option {
+                    Some(_bytes_read) => {
+                        if buffer.len() == 4 {
+                            let mut iterator = buffer.into_iter();
 
-                                let endians = [
-                                    iterator.next().ok_or(NetworkError::MalformedCode)?,
-                                    iterator.next().ok_or(NetworkError::MalformedCode)?,
-                                    iterator.next().ok_or(NetworkError::MalformedCode)?,
-                                    iterator.next().ok_or(NetworkError::MalformedCode)?
-                                ];
+                            let endians = [
+                                iterator.next().ok_or(NetworkError::MalformedCode)?,
+                                iterator.next().ok_or(NetworkError::MalformedCode)?,
+                                iterator.next().ok_or(NetworkError::MalformedCode)?,
+                                iterator.next().ok_or(NetworkError::MalformedCode)?
+                            ];
 
-                                let code = u32::from_be_bytes(endians);
+                            let code = u32::from_be_bytes(endians);
 
-                                code == expected_reply
-                            } else {
-                                false
-                            }
-                        },
-                        None => false // Special case where stream was finished early.
+                            code == expected_reply
+                        } else {
+                            false
+                        }
                     },
-                    // Failed to read buffer (did not receive confirmation).
-                    Err(_) => false
+                    None => false // Special case where stream was finished early.
                 },
-                // Timed out (did not receive confirmation).
+                // Failed to read buffer (did not receive confirmation).
                 Err(_) => false
-            })
-        }
+            },
+            // Timed out (did not receive confirmation).
+            Err(_) => false
+        })
     }
 
     pub async fn receive(connection: Connection, packet_sender: Sender<(usize, Packet)>) -> Res<()> {
@@ -96,4 +97,7 @@ impl ForeignManager {
 
     }
 
+    pub fn clone_connection(&self) -> Connection {
+        self.connection.clone()
+    }
 }
