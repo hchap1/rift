@@ -6,6 +6,7 @@ use crate::{backend::chat::Chat, error::{ChatError, Res}, frontend::{application
 
 #[derive(Debug, Clone)]
 pub enum ChatMessage {
+    SetActiveChat(usize),
     ReceiveForeignPacket(usize, Packet),
     SentLocalPacket(usize, Packet),
 
@@ -56,6 +57,12 @@ impl Page for ChatPage {
         match message {
 
             Message::ChatMessage(message) => match message {
+
+                // Set the active chat asynchronously
+                ChatMessage::SetActiveChat(stable_id) => {
+                    self.active_chat = stable_id;
+                    Task::none()
+                }
 
                 // Message to record an incoming message. This is the only interface through which the user can see a message.
                 ChatMessage::ReceiveForeignPacket(author, packet) => match self.add_packet(author, false, packet) {

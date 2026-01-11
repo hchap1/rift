@@ -83,7 +83,10 @@ impl ConnectionManager {
                     let _ = connections.insert(connection.stable_id(), connection);
                 },
                 ConnectionManagerMessage::Message(stable_id, packet) => {
+                    println!("Connection manager received send task to {stable_id}");
+                    println!("Connections: {connections:?}");
                     if let Some(foreign) = connections.get(&stable_id) {
+                        println!("Found connection");
                         match foreign.distribute(packet).await {
                             Ok(is_valid) => if !is_valid { send(ConnectionManagerMessage::Error(ChatError::InvalidCode.into()), &sender).await? },
                             Err(error) => send(ConnectionManagerMessage::Error(error), &sender).await?

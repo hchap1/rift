@@ -74,8 +74,14 @@ impl Page for Application {
                 }
 
                 Global::SwitchTo(page) => {
+
+                    let task = if let Pages::Chat(stable_id) = page {
+                        Task::done(ChatMessage::SetActiveChat(stable_id).into())
+                    } else { Task::none() };
+
                     self.active_page = page;
-                    Task::none()
+
+                    task
                 }
 
                 // Initiate a connection. Upon success, backend will inform frontend of the connection.
