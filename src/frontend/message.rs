@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use iroh::EndpointId;
 
-use crate::{error::Error, frontend::{notification::Notification, pages::{Pages, add_chat_page::AddChatMessage, browse_chats_page::BrowseChatsMessage}}, networking::{packet::Packet, server::Local}};
+use crate::{error::Error, frontend::{notification::Notification, pages::{Pages, add_chat_page::AddChatMessage, browse_chats_page::BrowseChatsMessage, chat_page::ChatMessage}}, networking::{packet::Packet, server::Local}};
 
 macro_rules! message_enum {
     (
@@ -52,6 +52,7 @@ message_enum! {
     pub enum Message {
         Global,
         AddChatMessage,
-        BrowseChatsMessage
+        BrowseChatsMessage,
+        ChatMessage
     }
 }

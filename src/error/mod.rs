@@ -31,6 +31,11 @@ macro_rules! error_enum {
     };
 }
 
+#[derive(Clone, Debug)]
+pub enum ChatError {
+    NoChatOpen
+}
+
 #[derive(Debug, Clone)]
 pub enum ChannelError {
     ChannelDead,
@@ -67,6 +72,7 @@ error_enum! {
         ConnectionError,
         WriteError,
         ClosedStream,
-        NetworkError
+        NetworkError,
+        ChatError
     }
 }

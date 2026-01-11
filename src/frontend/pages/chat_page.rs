@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use iced::{Task, widget::{Column, Container, Scrollable}};
 
-use crate::{backend::chat::Chat, frontend::{application::Page, message::Message}, networking::packet::Packet};
+use crate::{backend::chat::Chat, error::{ChatError, Res}, frontend::{application::Page, message::{Global, Message}, notification::Notification}, networking::packet::Packet};
 
 #[derive(Debug, Clone)]
 pub enum ChatMessage {
@@ -13,6 +13,15 @@ pub enum ChatMessage {
 pub struct ChatPage {
     active_chat: usize,
     chats: HashMap<usize, Chat>
+}
+
+impl ChatPage {
+    fn add_packet(&mut self, local: bool, packet: Packet) -> Res<()> {
+        match self.chats.get_mut(&self.active_chat) {
+            Some(chat) => Ok(chat.add_packet(local, packet)),
+            None => Err(ChatError::NoChatOpen.into())
+        }
+    }
 }
 
 impl Page for ChatPage {
@@ -29,9 +38,17 @@ impl Page for ChatPage {
 
     fn update(&mut self, message: Message) -> Task<Message> {
         match message {
-            Message::ChatMessage(message) {
-
-            }
+            Message::ChatMessage(message) => match message {
+                ChatMessage::ReceiveForeignPacket(packet) => match self.add_packet(false, packet) {
+                    Ok(value) => value.into(),
+                    Err(error) => Task::done(Global::Notify(error.into()).into())
+                },
+                ChatMessage::SentLocalPacket(packet) => match self.add_packet(true, packet) {
+                    Ok(value) => value.into(),
+                    Err(error) => Task::done(Global::Notify(error.into()).into())
+                }
+            },
+            _ => Task::none()
         }
     }
 }

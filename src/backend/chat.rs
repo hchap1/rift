@@ -20,4 +20,8 @@ impl Chat {
             )
         )
     }
+
+    pub fn add_packet(&mut self, local: bool, packet: Packet) {
+        self.packets.push((local, packet));
+    }
 }
