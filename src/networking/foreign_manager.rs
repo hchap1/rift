@@ -83,10 +83,13 @@ impl ForeignManager {
 
             let mut buffer: Vec<u8> = Vec::new();
 
-            // All errors indicate failure of this transmission.
-            if receiver.read(&mut buffer).await.is_err() {
-                let _ = sender.finish();
-                continue;
+            match receiver.read(&mut buffer).await {
+                Ok(_) => {},
+                Err(e) => {
+                    println!("ERROR!: {e:?}");
+                    let _ = sender.finish();
+                    continue;
+                }
             }
 
             println!("Successfully read packet!");
