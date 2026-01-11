@@ -19,8 +19,8 @@ use crate::util::channel::send;
 pub struct Local {
     endpoint: Endpoint,
     connection_manager: ConnectionManager,
-    packet_sender: Sender<Packet>,
-    packet_receiver: Receiver<Packet>
+    packet_sender: Sender<(usize, Packet)>,
+    packet_receiver: Receiver<(usize, Packet)>
 }
 
 impl Local {
@@ -41,7 +41,7 @@ impl Local {
         })
     }
 
-    pub async fn connect(endpoint: Endpoint, sender: Sender<ConnectionManagerMessage>, packet_sender: Sender<Packet>, target: EndpointAddr) -> Res<usize> {
+    pub async fn connect(endpoint: Endpoint, sender: Sender<ConnectionManagerMessage>, packet_sender: Sender<(usize, Packet)>, target: EndpointAddr) -> Res<usize> {
         let foreign = Foreign::establish(endpoint, target, packet_sender).await?;
         let id = foreign.stable_id;
         send(ConnectionManagerMessage::Add(foreign), &sender).await?;
@@ -50,10 +50,10 @@ impl Local {
 
     pub fn ep(&self) -> Endpoint { self.endpoint.clone() }
     pub fn cs(&self) -> Sender<ConnectionManagerMessage> { self.connection_manager.yield_sender() }
-    pub fn ps(&self) -> Sender<Packet> { self.packet_sender.clone() }
+    pub fn ps(&self) -> Sender<(usize, Packet)> { self.packet_sender.clone() }
     
     /// Get a clone of the packet output receiver to be used with the frontend.
-    pub fn yield_packet_output(&self) -> Receiver<Packet> { self.packet_receiver.clone() }
+    pub fn yield_packet_output(&self) -> Receiver<(usize, Packet)> { self.packet_receiver.clone() }
 
     /// Get a clone of the connection manager output receiver to be used with the frontend.
     /// This reports events such as errors or succesful connections, foreign and locally initiated.
@@ -68,14 +68,14 @@ pub struct Foreign {
 
 impl Foreign {
 
-    pub fn new(connection: Connection, packet_sender: Sender<Packet>) -> Foreign {
+    pub fn new(connection: Connection, packet_sender: Sender<(usize, Packet)>) -> Foreign {
         Foreign {
             stable_id: connection.stable_id(),
             foreign_manager: Arc::new(ForeignManager::new(connection, packet_sender))
         }
     }
     
-    pub async fn establish(endpoint: Endpoint, target: EndpointAddr, packet_sender: Sender<Packet>) -> Res<Foreign> {
+    pub async fn establish(endpoint: Endpoint, target: EndpointAddr, packet_sender: Sender<(usize, Packet)>) -> Res<Foreign> {
         let connection = endpoint.connect(target, ALPN).await?;
         Ok(Foreign::new(connection, packet_sender))
     }

@@ -34,7 +34,7 @@ pub struct ConnectionManager {
 
 impl ConnectionManager {
 
-    pub fn new(endpoint: Endpoint, packet_sender: Sender<Packet>) -> ConnectionManager {
+    pub fn new(endpoint: Endpoint, packet_sender: Sender<(usize, Packet)>) -> ConnectionManager {
         let (thread_sender, thread_receiver) = unbounded();
         let (output_sender, output_receiver) = unbounded();
 
@@ -46,7 +46,7 @@ impl ConnectionManager {
         }
     }
 
-    async fn listen(endpoint: Endpoint, task_sender: Send, output: Send, packet_sender: Sender<Packet>) -> Res<()> {
+    async fn listen(endpoint: Endpoint, task_sender: Send, output: Send, packet_sender: Sender<(usize, Packet)>) -> Res<()> {
         loop {
             let res = match endpoint.accept().await {
                 Some(accept) => accept.await,
@@ -72,7 +72,7 @@ impl ConnectionManager {
             match task {
                 ConnectionManagerMessage::Quit => return Ok(()),
                 ConnectionManagerMessage::Add(connection) => {
-                    send(ConnectionManagerMessage::SuccessfulConnection(connection.stable_id()), &sender).await;
+                    send(ConnectionManagerMessage::SuccessfulConnection(connection.stable_id()), &sender).await?;
                     let _ = connections.insert(connection.stable_id(), connection);
                 },
                 error => send(error, &sender).await?

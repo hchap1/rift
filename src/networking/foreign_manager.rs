@@ -14,7 +14,7 @@ pub struct ForeignManager {
 
 impl ForeignManager {
 
-    pub fn new(connection: Connection, packet_sender: Sender<Packet>) -> ForeignManager {
+    pub fn new(connection: Connection, packet_sender: Sender<(usize, Packet)>) -> ForeignManager {
         ForeignManager {
             connection: connection.clone(),
             _receive_handle: tokio::spawn(ForeignManager::receive(connection, packet_sender))
@@ -66,9 +66,13 @@ impl ForeignManager {
         }
     }
 
-    pub async fn receive(connection: Connection, packet_sender: Sender<Packet>) -> Res<()> {
+    pub async fn receive(connection: Connection, packet_sender: Sender<(usize, Packet)>) -> Res<()> {
+
+        let author: usize = connection.stable_id();
         
         loop {
+
+            // Accept a single bidirectional channel instance for this packet exchange.
             let (mut sender, mut receiver) = match connection.accept_bi().await {
                 Ok(v) => v,
                 _ => return Ok(())
@@ -86,8 +90,8 @@ impl ForeignManager {
             sender.write_all(&packet.code.to_be_bytes()).await?;
             let _ = sender.finish();
 
-            // Send the packet off to be processed.
-            send(packet, &packet_sender).await?;
+            // Send the packet off to be processed, alongside this connection id.
+            send((author, packet), &packet_sender).await?;
         }
 
     }
