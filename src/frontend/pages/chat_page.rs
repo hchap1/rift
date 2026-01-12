@@ -117,6 +117,7 @@ impl Page for ChatPage {
 
                 // Handle a failed message
                 ChatMessage::PacketFailed(stable_id, unique_id) => {
+                    println!("PACKET FAILED!");
                     if let Some(chat) = self.chats.get_mut(&stable_id) {
                         chat.update_state(unique_id, crate::backend::chat::PacketState::Failed);
                     }
@@ -126,6 +127,7 @@ impl Page for ChatPage {
 
                 // Handle a successful packet that received a confirmation code from the foreign client
                 ChatMessage::PacketConfirmed(stable_id, unique_id) => {
+                    println!("PACKET CONFIRMED!");
                     if let Some(chat) = self.chats.get_mut(&stable_id) {
                         chat.update_state(unique_id, crate::backend::chat::PacketState::Verified);
                     }

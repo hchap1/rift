@@ -1,5 +1,8 @@
+use iced::Border;
+use iced::Shadow;
 use iced::widget::Column;
 use iced::widget::Container;
+use iced::widget::container;
 use iced::widget::text;
 
 use crate::backend::chat::PacketState;
@@ -11,7 +14,7 @@ impl PacketWidget {
     pub fn parse(author: String, packet: &Packet, packet_state: PacketState) -> Container<'_, Message> {
         let text_widget = match packet.kind {
             PacketType::Message => {
-                text(String::from_utf8_lossy(&packet.data))
+               text(String::from_utf8_lossy(&packet.data))
                     .color(match packet_state {
                         PacketState::Unknown => Colour::loading(),
                         PacketState::Failed => Colour::error(),
@@ -25,6 +28,14 @@ impl PacketWidget {
             Column::new()
                 .push(text(author))
                 .push(text_widget)
+        ).style(move |_| 
+            container::Style {
+                text_color: None,
+                background: Some(iced::Background::Color(Colour::background())),
+                border: Border::default().rounded(10),
+                shadow: Shadow::default(),
+                snap: false
+            }
         )
     }
 }
