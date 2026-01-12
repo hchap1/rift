@@ -1,6 +1,6 @@
 use std::sync::Arc;
-use iced::{Task, widget::{Column, Container, Row, button, text}};
-use crate::{error::ChatError, frontend::{message::{Global, Message}, pages::{Pages, add_chat_page::AddChatPage, browse_chats_page::{BrowseChatsMessage, BrowseChatsPage}, chat_page::{ChatMessage, ChatPage}}}, networking::{connection_manager::ConnectionManagerMessage, server::Local}, util::relay::Relay};
+use iced::{Border, Shadow, Task, widget::{Column, Container, Row, button, text}};
+use crate::{error::ChatError, frontend::{message::{Global, Message}, pages::{Pages, add_chat_page::AddChatPage, browse_chats_page::{BrowseChatsMessage, BrowseChatsPage}, chat_page::{ChatMessage, ChatPage}}, widget::Colour}, networking::{connection_manager::ConnectionManagerMessage, server::Local}, util::relay::Relay};
 use crate::frontend::notification::Notification;
 
 pub struct Application {
@@ -54,6 +54,14 @@ impl Page for Application {
                         .push(button("ADD CHAT").on_press_with(|| Global::SwitchTo(Pages::AddChat).into()))
                         .push(button("BROWSE CHATS").on_press_with(|| Global::SwitchTo(Pages::BrowseChats).into()))
                 ).push(contents)
+        ).style(|_|
+            iced::widget::container::Style {
+                text_color: None,
+                background: Some(iced::Background::Color(Colour::background())),
+                border: Border::default().rounded(10),
+                shadow: Shadow::default(),
+                snap: false
+            }
         )
 
     }
