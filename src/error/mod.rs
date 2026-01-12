@@ -65,6 +65,8 @@ impl From<TryRecvError> for ChannelError {
     }
 }
 
+type StdIoError = std::io::Error;
+
 error_enum! {
     pub enum Error {
         BindError,
@@ -75,6 +77,7 @@ error_enum! {
         WriteError,
         ClosedStream,
         NetworkError,
-        ChatError
+        ChatError,
+        StdIoError
     }
 }
