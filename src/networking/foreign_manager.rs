@@ -2,9 +2,9 @@ use std::time::Duration;
 
 use async_channel::Sender;
 use iroh::endpoint::Connection;
-use tokio::{io::AsyncWriteExt, task::JoinHandle};
+use tokio::task::JoinHandle;
 
-use crate::{error::Res, networking::{error::NetworkError, packet::Packet}, util::channel::send};
+use crate::{error::{ChannelError, Res}, networking::{error::NetworkError, packet::Packet}, util::channel::send};
 
 #[derive(Debug)]
 pub struct ForeignManager {
@@ -34,44 +34,33 @@ impl ForeignManager {
         let bytes = &packet.to_bytes();
         println!("Created bytes: {bytes:?}");
         send.write_all(bytes).await?;
-        send.flush().await?;
+        send.finish()?;
 
         // TODO make the message only appear once verified that it was received. Else it will be red indicating it wasnt sent
 
         // Create a buffer to accept the verification code.
-        let mut buffer: Vec<u8> = Vec::new();
-        let ret = Ok(match tokio::time::timeout(Duration::from_secs(5), recv.read(&mut buffer)).await {
-            Ok(read_result) => match read_result {
-                Ok(read_option) => match read_option {
-                    Some(_bytes_read) => {
-                        if buffer.len() == 4 {
-                            let mut iterator = buffer.into_iter();
+        match tokio::time::timeout(Duration::from_secs(5), recv.read_to_end(4)).await {
+            Ok(read_result) => {
+                let buffer = match read_result {
+                    Ok(buffer) => buffer,
+                    Err(e) => return Err(e.into())
+                };
 
-                            let endians = [
-                                iterator.next().ok_or(NetworkError::MalformedCode)?,
-                                iterator.next().ok_or(NetworkError::MalformedCode)?,
-                                iterator.next().ok_or(NetworkError::MalformedCode)?,
-                                iterator.next().ok_or(NetworkError::MalformedCode)?
-                            ];
+                let mut iterator = buffer.into_iter();
 
-                            let code = u32::from_be_bytes(endians);
+                let endians = [
+                    iterator.next().ok_or(NetworkError::MalformedCode)?,
+                    iterator.next().ok_or(NetworkError::MalformedCode)?,
+                    iterator.next().ok_or(NetworkError::MalformedCode)?,
+                    iterator.next().ok_or(NetworkError::MalformedCode)?
+                ];
 
-                            code == expected_reply
-                        } else {
-                            false
-                        }
-                    },
-                    None => false // Special case where stream was finished early.
-                },
-                // Failed to read buffer (did not receive confirmation).
-                Err(_) => false
-            },
-            // Timed out (did not receive confirmation).
-            Err(_) => false
-        });
+                let code = u32::from_be_bytes(endians);
+                Ok(code == expected_reply)
+            }
 
-        send.finish()?;
-        ret
+            Err(_) => Err(ChannelError::ChannelDead.into())
+        }
     }
 
     pub async fn receive(connection: Connection, packet_sender: Sender<(usize, Packet)>) -> Res<()> {
