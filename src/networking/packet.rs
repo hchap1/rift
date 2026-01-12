@@ -1,6 +1,7 @@
+use async_channel::{Receiver, Sender, unbounded};
 use rand::{Rng, rng};
 
-use crate::{error::Res, networking::error::NetworkError};
+use crate::{error::Res, networking::error::NetworkError, util::channel::send};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PacketType {
@@ -75,5 +76,40 @@ impl Packet {
             code,
             data: message.into_bytes()
         }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum TrackedPacketResponse {
+    Confirmed,
+    Failed,
+}
+
+#[derive(Clone, Debug)]
+pub struct TrackedPacket {
+    pub recipient_stable_id: usize,
+    pub packet: Option<Packet>,
+    sender: Sender<TrackedPacketResponse>
+}
+
+impl TrackedPacket {
+    pub fn new(recipient_stable_id: usize, packet: Packet) -> (TrackedPacket, Receiver<TrackedPacketResponse>) {
+        let (sender, receiver) = unbounded();
+        (
+            TrackedPacket { recipient_stable_id, packet: Some(packet), sender },
+            receiver
+        )
+    }
+
+    pub async fn take_packet(&mut self) -> Option<Packet> {
+        self.packet.take()
+    }
+
+    pub async fn confirm_success(&self) -> Res<()> {
+        send(TrackedPacketResponse::Confirmed, &self.sender).await.map_err(|x| x.into())
+    }
+
+    pub async fn indicate_failure(&self) -> Res<()> {
+        send(TrackedPacketResponse::Failed, &self.sender).await.map_err(|x| x.into())
     }
 }

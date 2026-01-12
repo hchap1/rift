@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use iroh::EndpointId;
 
-use crate::{error::Error, frontend::{notification::Notification, pages::{Pages, add_chat_page::AddChatMessage, browse_chats_page::BrowseChatsMessage, chat_page::ChatMessage}}, networking::{packet::Packet, server::Local}};
+use crate::{error::Error, frontend::{notification::Notification, pages::{Pages, add_chat_page::AddChatMessage, browse_chats_page::BrowseChatsMessage, chat_page::ChatMessage}}, networking::{packet::{Packet, TrackedPacket}, server::Local}};
 
 macro_rules! message_enum {
     (
@@ -43,7 +43,7 @@ pub enum Global {
         LoadSuccess(Arc<Local>),
 
         // Interface with backend
-        Send(usize, Packet),                       // Send a packet to the given stable_id, requires a Connection to the foreign node to exist already.
+        Send(TrackedPacket),                       // Send a packet to the given stable_id, requires a Connection to the foreign node to exist already.
         Packet(usize, Packet),                     // When a new packet is received, this is the first message prior to it being relayed to page specific needs.
         Connect(EndpointId),
 }

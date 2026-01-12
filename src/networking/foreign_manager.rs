@@ -32,11 +32,8 @@ impl ForeignManager {
         let expected_reply = packet.code;
         // Write all the bytes into the stream before closing it, idiomatically signalling the end of this discrete packet.
         let bytes = &packet.to_bytes();
-        println!("Created bytes: {bytes:?}");
         send.write_all(bytes).await?;
         send.finish()?;
-
-        // TODO make the message only appear once verified that it was received. Else it will be red indicating it wasnt sent
 
         // Create a buffer to accept the verification code.
         match tokio::time::timeout(Duration::from_secs(5), recv.read_to_end(4)).await {

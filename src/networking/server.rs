@@ -13,6 +13,7 @@ use crate::networking::connection_manager::ConnectionManager;
 use crate::networking::connection_manager::ConnectionManagerMessage;
 use crate::networking::foreign_manager::ForeignManager;
 use crate::networking::packet::Packet;
+use crate::networking::packet::TrackedPacket;
 use crate::util::channel::send;
 
 #[derive(Debug)]
@@ -63,8 +64,8 @@ impl Local {
 
     /// Send a request through to a ForeignManager by ID to relay a packet through a new bi-directional stream.
     /// (Send a packet to a given stable_id)
-    pub async fn send_packet_to(sender: Sender<ConnectionManagerMessage>, stable_id: usize, packet: Packet) -> Res<()> {
-        send(ConnectionManagerMessage::Message(stable_id, packet), &sender).await?;
+    pub async fn send_packet_to(sender: Sender<ConnectionManagerMessage>, tracked_packet: TrackedPacket) -> Res<()> {
+        send(ConnectionManagerMessage::Message(tracked_packet), &sender).await?;
         Ok(())
     }
 }
@@ -94,7 +95,6 @@ impl Foreign {
     }
 
     pub async fn distribute(&self, packet: Packet) -> Res<bool> {
-        println!("DISTRIBUTING PACKET!");
         let connection = self.foreign_manager.clone_connection();
         ForeignManager::send_task(connection, packet).await
     }

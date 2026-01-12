@@ -131,14 +131,13 @@ impl Page for Application {
                     Task::done(ChatMessage::ReceiveForeignPacket(author, packet).into())
                 }
 
-                Global::Send(stable_id, packet) => {
-                    println!("OUTGOING PACKET TO {stable_id}");
+                Global::Send(tracked_packet) => {
                     let connection_manager_sender = match self.networking.as_mut() {
                         Some(local) => local.cs(),
                         None => return Task::done(Global::Error(ChatError::NetworkingBackendFailedToInitialise.into()).into())
                     };
 
-                    Task::future(Local::send_packet_to(connection_manager_sender, stable_id, packet)).map(|res| match res {
+                    Task::future(Local::send_packet_to(connection_manager_sender, tracked_packet)).map(|res| match res {
                         Ok(_) => Global::None,
                         Err(error) => Global::Error(error)
                     }.into())

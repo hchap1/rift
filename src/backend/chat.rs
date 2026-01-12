@@ -1,10 +1,16 @@
 use iced::widget::Column;
-
 use crate::{frontend::{message::Message, widget::packet_widget::PacketWidget}, networking::packet::Packet};
+
+#[derive(Copy, Debug, Clone, PartialEq, Eq)]
+pub enum PacketState {
+    Unknown,
+    Failed,
+    Verified
+}
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Chat {
-    packets: Vec<(bool, Packet)>
+    packets: Vec<(bool, Packet, PacketState)>
 }
 
 impl Chat {
@@ -16,14 +22,24 @@ impl Chat {
 
     pub fn view(&self, foreign: String, local: String) -> Column<'_, Message> {
         Column::from_iter(
-            self.packets.iter().map(|(is_local, packet)| {
+            self.packets.iter().map(|(is_local, packet, state)| {
                 let username = if *is_local { &local } else { &foreign };
-                PacketWidget::parse(username.clone(), packet).into()
+                PacketWidget::parse(username.clone(), packet, *state).into()
             })
         )
     }
 
     pub fn add_packet(&mut self, local: bool, packet: Packet) {
-        self.packets.push((local, packet));
+        self.packets.push((local, packet, if local { PacketState::Unknown } else { PacketState::Verified }));
+    }
+
+    pub fn get_unique_id(&self) -> usize {
+        self.packets.len()
+    }
+
+    pub fn update_state(&mut self, id: usize, state: PacketState) {
+        if let Some(packet) = self.packets.get_mut(id) {
+            packet.2 = state;
+        }
     }
 }

@@ -9,6 +9,7 @@ use crate::error::ChatError;
 use crate::error::Error;
 use crate::error::Res;
 use crate::networking::packet::Packet;
+use crate::networking::packet::TrackedPacket;
 use crate::networking::server::Foreign;
 use crate::util::channel::send;
 
@@ -25,7 +26,7 @@ pub enum ConnectionManagerMessage {
     SuccessfulConnection(usize),
 
     // Message
-    Message(usize, Packet)                  // Signal the management thread to find a client with this stable_id and distribute the packet to it.
+    Message(TrackedPacket)                  // Signal the management thread to find a client with this stable_id and distribute the packet to it.
 }
 
 #[derive(Debug, Clone)]
@@ -82,14 +83,26 @@ impl ConnectionManager {
                     send(ConnectionManagerMessage::SuccessfulConnection(connection.stable_id()), &sender).await?;
                     let _ = connections.insert(connection.stable_id(), connection);
                 },
-                ConnectionManagerMessage::Message(stable_id, packet) => {
-                    println!("Connection manager received send task to {stable_id}");
-                    println!("Connections: {connections:?}");
-                    if let Some(foreign) = connections.get(&stable_id) {
-                        println!("Found connection");
+                ConnectionManagerMessage::Message(mut tracked_packet) => {
+
+                    let packet = match tracked_packet.take_packet().await {
+                        Some(packet) => packet,
+                        None => {
+                            tracked_packet.indicate_failure().await?;
+                            continue;
+                        }
+                    };
+                    
+                    if let Some(foreign) = connections.get(&tracked_packet.recipient_stable_id) {
                         match foreign.distribute(packet).await {
-                            Ok(is_valid) => if !is_valid { send(ConnectionManagerMessage::Error(ChatError::InvalidCode.into()), &sender).await? },
-                            Err(error) => send(ConnectionManagerMessage::Error(error), &sender).await?
+                            Ok(is_valid) => if !is_valid {
+                                tracked_packet.indicate_failure().await?;
+                                send(ConnectionManagerMessage::Error(ChatError::InvalidCode.into()), &sender).await?
+                            } else { tracked_packet.confirm_success().await? },
+                            Err(error) => {
+                                tracked_packet.indicate_failure().await?;
+                                send(ConnectionManagerMessage::Error(error), &sender).await?
+                            }
                         }
                     }
                 }
