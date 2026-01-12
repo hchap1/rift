@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use async_channel::Sender;
+use iced::futures::FutureExt;
 use iroh::endpoint::Connection;
 use tokio::task::JoinHandle;
 
@@ -9,7 +10,7 @@ use crate::{error::Res, networking::{error::NetworkError, packet::Packet}, util:
 #[derive(Debug)]
 pub struct ForeignManager {
    connection: Connection,
-   _receive_handle: JoinHandle<Res<()>>
+   _receive_handle: JoinHandle<()>
 }
 
 impl ForeignManager {
@@ -17,7 +18,7 @@ impl ForeignManager {
     pub fn new(connection: Connection, packet_sender: Sender<(usize, Packet)>) -> ForeignManager {
         ForeignManager {
             connection: connection.clone(),
-            _receive_handle: tokio::spawn(ForeignManager::receive(connection, packet_sender))
+            _receive_handle: tokio::spawn(ForeignManager::receive(connection, packet_sender).then(async |output| println!("OUTPUT: {output:?}")))
         }
     }
 
@@ -96,7 +97,7 @@ impl ForeignManager {
 
             let packet = Packet::from_bytes(buffer)?;
             // TODO fix this
-            // sender.write_all(&packet.code.to_be_bytes()).await?;
+            sender.write_all(&packet.code.to_be_bytes()).await?;
             let _ = sender.finish();
 
             // Send the packet off to be processed, alongside this connection id.
