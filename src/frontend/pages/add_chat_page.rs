@@ -1,9 +1,9 @@
 use std::str::FromStr;
 
-use iced::{Task, widget::{Column, Container, button, text_input}};
+use iced::{Background, Border, Task, widget::{Column, Container, button, text_input}};
 use iroh::EndpointId;
 
-use crate::frontend::{application::Page, message::{Global, Message}, notification::Notification};
+use crate::frontend::{application::Page, message::{Global, Message}, notification::Notification, widget::Colour};
 
 #[derive(Default)]
 pub struct AddChatPage {
@@ -24,6 +24,14 @@ impl Page for AddChatPage {
                     text_input("Enter NODE ID.", &self.input)
                         .on_submit(AddChatMessage::Submit.into())
                         .on_input_maybe(Some(|new_content| AddChatMessage::Input(new_content).into()))
+                        .style(|_,_| iced::widget::text_input::Style {
+                            background: Background::Color(Colour::foreground()),
+                            border: Border::default().rounded(10),
+                            icon: Colour::accent(),
+                            placeholder: Colour::loading(),
+                            value: Colour::text(),
+                            selection: Colour::accent()
+                        })
                 )
                 .push(
                     button("Connect")
