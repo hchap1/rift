@@ -1,4 +1,5 @@
 use iced::Border;
+use iced::Length;
 use iced::Shadow;
 use iced::widget::Column;
 use iced::widget::Container;
@@ -26,8 +27,8 @@ impl PacketWidget {
 
         Container::new(
             Column::new()
-                .push(text(author))
-                .push(text_widget)
+                .push(text(author).color(Colour::accent()).size(20))
+                .push(text_widget.size(15))
         ).style(move |_| 
             container::Style {
                 text_color: None,
@@ -36,6 +37,6 @@ impl PacketWidget {
                 shadow: Shadow::default(),
                 snap: false
             }
-        )
+        ).width(Length::Fill)
     }
 }
