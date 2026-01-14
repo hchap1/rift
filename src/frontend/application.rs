@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use iced::{Border, Shadow, Task, widget::{Column, Container, Row, button, text}};
+use iced::{Border, Length, Shadow, Task, widget::{Column, Container, Row, button, text}};
 use crate::{error::ChatError, frontend::{message::{Global, Message}, pages::{Pages, add_chat_page::AddChatPage, browse_chats_page::{BrowseChatsMessage, BrowseChatsPage}, chat_page::{ChatMessage, ChatPage}}, widget::Colour}, networking::{connection_manager::ConnectionManagerMessage, server::Local}, util::relay::Relay};
 use crate::frontend::notification::Notification;
 
@@ -62,7 +62,7 @@ impl Page for Application {
                 shadow: Shadow::default(),
                 snap: false
             }
-        )
+        ).height(Length::Fill).width(Length::Fill)
 
     }
 
