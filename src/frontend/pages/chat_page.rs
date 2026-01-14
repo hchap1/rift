@@ -1,8 +1,8 @@
 use std::{collections::HashMap, mem::take};
 
-use iced::{Length, Task, widget::{Column, Container, Scrollable, text_input}};
+use iced::{Background, Border, Length, Task, widget::{Column, Container, Scrollable, text_input}};
 
-use crate::{backend::chat::Chat, error::Res, frontend::{application::Page, message::{Global, Message}}, networking::packet::{Packet, TrackedPacket, TrackedPacketResponse}};
+use crate::{backend::chat::Chat, error::Res, frontend::{application::Page, message::{Global, Message}, widget::Colour}, networking::packet::{Packet, TrackedPacket, TrackedPacketResponse}};
 
 #[derive(Debug, Clone)]
 pub enum ChatMessage {
@@ -59,6 +59,14 @@ impl Page for ChatPage {
                         .on_input_maybe(Some(|new_value| ChatMessage::UpdateMessageBox(new_value).into()))
                         .on_submit(ChatMessage::Send.into())
                         .size(32)
+                        .style(|_,_| iced::widget::text_input::Style {
+                            background: Background::Color(Colour::foreground()),
+                            border: Border::default().rounded(10),
+                            icon: Colour::accent(),
+                            placeholder: Colour::loading(),
+                            value: Colour::text(),
+                            selection: Colour::accent()
+                        })
                 )
         )
     }
