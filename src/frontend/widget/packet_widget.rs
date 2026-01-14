@@ -32,11 +32,11 @@ impl PacketWidget {
         ).style(move |_| 
             container::Style {
                 text_color: None,
-                background: Some(iced::Background::Color(Colour::background())),
+                background: Some(iced::Background::Color(Colour::foreground())),
                 border: Border::default().rounded(10),
                 shadow: Shadow::default(),
                 snap: false
             }
-        ).width(Length::Fill)
+        ).width(Length::Fill).padding(10)
     }
 }

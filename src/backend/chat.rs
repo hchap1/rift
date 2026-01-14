@@ -26,7 +26,7 @@ impl Chat {
                 let username = if *is_local { &local } else { &foreign };
                 PacketWidget::parse(username.clone(), packet, *state).into()
             })
-        )
+        ).padding(10).spacing(10)
     }
 
     pub fn add_packet(&mut self, local: bool, packet: Packet) {
