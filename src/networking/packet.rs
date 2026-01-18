@@ -1,4 +1,5 @@
 use std::io::Cursor;
+use iced::widget::image::Handle;
 
 use async_channel::{Receiver, Sender, unbounded};
 use image::DynamicImage;
@@ -32,11 +33,12 @@ impl PacketType {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Packet {
     pub kind: PacketType,
     pub code: u32,
-    pub data: Vec<u8>
+    pub data: Vec<u8>,
+    pub decoded_image: Option<Handle>
 }
 
 impl Packet {
@@ -53,12 +55,17 @@ impl Packet {
         ];
 
         let code = u32::from_be_bytes(endians);
-        let data = iterator.collect();
+        let data: Vec<u8> = iterator.collect();
+
+        let decoded_image = if let PacketType::Image = kind {
+            Some(Handle::from_bytes(data.clone()))
+        } else { None };
 
         Ok(Packet {
             kind,
             code,
-            data
+            data,
+            decoded_image
         })
     }
 
@@ -80,7 +87,8 @@ impl Packet {
         Packet {
             kind: PacketType::Message,
             code,
-            data: message.into_bytes()
+            data: message.into_bytes(),
+            decoded_image: None
         }
     }
 
@@ -94,7 +102,8 @@ impl Packet {
         Ok(Packet {
             kind: PacketType::Image,
             code,
-            data
+            data,
+            decoded_image: None
         })
     }
 }

@@ -1,12 +1,10 @@
 use iced::Border;
 use iced::Length;
 use iced::Shadow;
-use iced::widget::image::Handle;
 use iced::widget::Column;
 use iced::widget::Container;
 use iced::widget::container;
 use iced::widget::text;
-use iced::widget::image;
 
 use crate::backend::chat::PacketState;
 use crate::frontend::widget::Colour;
@@ -27,7 +25,7 @@ impl PacketWidget {
                )
             },
             PacketType::Image => {
-                Container::new(image(Handle::from_bytes(packet.data.clone())))
+                Container::new(packet.decoded_image.as_ref().map(iced::widget::image))
             },
             PacketType::Username => Container::new(text(format!("Username Update: {}", String::from_utf8_lossy(&packet.data))))
         };

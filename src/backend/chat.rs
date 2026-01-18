@@ -8,7 +8,7 @@ pub enum PacketState {
     Verified
 }
 
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Chat {
     packets: Vec<(bool, Packet, PacketState)>
 }
