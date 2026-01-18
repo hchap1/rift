@@ -87,7 +87,7 @@ impl Page for Application {
                                         ).into()))
                                         .push(
                                             match self.active_chats.is_empty() {
-                                                true => Some(text("You don't seem to have any chats yet...")),
+                                                true => Some(text("You don't seem to have any chats yet...").color(Colour::loading())),
                                                 false => None
                                             }
                                         )
