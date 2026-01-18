@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use iced::{Background, Border, Length, Shadow, Task, widget::{Column, Container, Row, Scrollable, button, text, text_input}};
-use crate::{error::ChatError, frontend::{message::{Global, Message}, pages::{Pages, add_chat_page::AddChatPage, chat_page::{ChatMessage, ChatPage}}, widget::Colour}, networking::{connection_manager::ConnectionManagerMessage, server::Local}, util::relay::Relay};
+use crate::{error::ChatError, frontend::{message::{Global, Message}, pages::{Pages, add_chat_page::AddChatPage, chat_page::{ChatMessage, ChatPage}}, widget::Colour}, networking::{connection_manager::ConnectionManagerMessage, packet::{Packet, TrackedPacket}, server::Local}, util::relay::Relay};
 use crate::frontend::notification::Notification;
 
 pub struct Application {
@@ -120,7 +120,7 @@ impl Page for Application {
                                                         .padding(5)
                                                         .style(|_|
                                                             iced::widget::container::Style {
-                                                                background: Some(Background::Color(Colour::accent())),
+                                                                background: Some(Background::Color(Colour::error())),
                                                                 text_color: None,
                                                                 border: Border::default().rounded(5),
                                                                 shadow: Shadow::default(),
@@ -282,7 +282,10 @@ impl Page for Application {
 
                 Global::ChatConnected(stable_id) => {
                     self.active_chats.push((stable_id, stable_id.to_string(), 1));
-                    Task::none()
+                    match self.username.as_ref() {
+                        Some(username) => Task::done(Global::Send(TrackedPacket::new(stable_id, Packet::username(username.to_string())).0).into()),
+                        None => Task::none()
+                    }
                 }
 
                 Global::UsernameInput(value) => {

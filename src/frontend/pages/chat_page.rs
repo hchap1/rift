@@ -99,7 +99,7 @@ impl Page for ChatPage {
                             text_input(&format!("Message {}", self.active_chat), &self.message_box)
                                 .on_input_maybe(Some(|new_value| ChatMessage::UpdateMessageBox(new_value).into()))
                                 .on_submit(ChatMessage::Send.into())
-                                .size(32)
+                                .size(20)
                                 .style(|_,_| iced::widget::text_input::Style {
                                     background: Background::Color(Colour::foreground()),
                                     border: Border::default().rounded(10),
