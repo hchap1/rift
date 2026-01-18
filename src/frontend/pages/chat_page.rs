@@ -74,6 +74,7 @@ impl Page for ChatPage {
                                 })
                         ).push(
                             button(text!("IMAGE"))
+                                .height(Length::Fill)
                                 .on_press_with(|| ChatMessage::PickImage.into())
                                 .style(
                                     |_, status|

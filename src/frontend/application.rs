@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use iced::{Border, Length, Shadow, Task, widget::{Column, Container, Row, Scrollable, button, text}};
+use iced::{Background, Border, Length, Shadow, Task, widget::{Column, Container, Row, Scrollable, button, text}};
 use crate::{error::ChatError, frontend::{message::{Global, Message}, pages::{Pages, add_chat_page::AddChatPage, chat_page::{ChatMessage, ChatPage}}, widget::Colour}, networking::{connection_manager::ConnectionManagerMessage, server::Local}, util::relay::Relay};
 use crate::frontend::notification::Notification;
 
@@ -54,7 +54,23 @@ impl Page for Application {
                             button("ADD CHAT").on_press_with(|| Global::SwitchTo(Pages::AddChat).into())
                         ).push(
                             Scrollable::new(Column::from_iter(self.active_chats.iter().map(
-                                |chat| button(text(chat)).on_press_with(|| Global::SwitchTo(Pages::Chat(*chat)).into()).into()
+                                |chat| button(text(chat))
+                                    .on_press_with(|| Global::SwitchTo(Pages::Chat(*chat)).into())
+                                    .height(Length::Fill)
+                                    .style(
+                                        |_, status|
+                                        iced::widget::button::Style {
+                                            background: Some(Background::Color(match status {
+                                                button::Status::Active => Colour::accent(),
+                                                button::Status::Hovered => Colour::foreground(),
+                                                _ => Colour::background()
+                                            })),
+                                            text_color: Colour::text(),
+                                            border: Border::default().rounded(10),
+                                            shadow: Shadow::default(),
+                                            snap: false
+                                        }
+                                    ).into()
                             )))
                         )
                 ).push(contents)
