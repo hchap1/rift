@@ -84,8 +84,14 @@ impl Page for Application {
                                                 shadow: Shadow::default(),
                                                 snap: false
                                             }
-                                        ).into()
-                                )))
+                                        ).into()))
+                                        .push(
+                                            match self.active_chats.is_empty() {
+                                                true => Some(text("You don't seem to have any chats yet...")),
+                                                false => None
+                                            }
+                                        )
+                                    )
                             ).style(|_|
                                 iced::widget::container::Style {
                                     background: Some(Background::Color(Colour::foreground())),

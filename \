@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use iced::{Background, Border, Shadow, Task, widget::{Column, Container, button, text_input}};
+use iced::{Background, Border, Task, widget::{Column, Container, button, text_input}};
 use iroh::EndpointId;
 
 use crate::frontend::{application::Page, message::{Global, Message}, notification::Notification, widget::Colour};
@@ -19,7 +19,7 @@ pub enum AddChatMessage {
 impl Page for AddChatPage {
     fn view(&self) -> Container<'_, Message> {
         Container::new(
-            Column::new().padding(10).spacing(10)
+            Column::new().padding(10).spacing(20)
                 .push(
                     text_input("Enter NODE ID.", &self.input)
                         .on_submit(AddChatMessage::Submit.into())
@@ -36,20 +36,6 @@ impl Page for AddChatPage {
                 .push(
                     button("Connect")
                         .on_press(AddChatMessage::Submit.into())
-                            .style(
-                                |_, status|
-                                iced::widget::button::Style {
-                                    background: Some(Background::Color(match status {
-                                        button::Status::Active => Colour::accent(),
-                                        button::Status::Hovered => Colour::foreground(),
-                                        _ => Colour::background()
-                                    })),
-                                    text_color: Colour::text(),
-                                    border: Border::default().rounded(10),
-                                    shadow: Shadow::default(),
-                                    snap: false
-                                }
-                            )
                 )
         )
     }
