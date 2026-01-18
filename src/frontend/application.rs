@@ -9,7 +9,7 @@ pub struct Application {
     chat_page: Option<Box<dyn Page>>,
     add_chat_page: Option<Box<dyn Page>>,
     notification_stack: Vec<Notification>,
-    active_chats: Vec<(usize, String)>,
+    active_chats: Vec<(usize, String, usize)>,
     username_input: String,
     username: Option<String>
 }
@@ -111,7 +111,25 @@ impl Page for Application {
                         ).push(
                             Container::new(
                                 Scrollable::new(Column::from_iter(self.active_chats.iter().map(
-                                    |(id, chat)| button(text(chat).size(15))
+                                    |(id, chat, notifications)| button(
+                                        Row::new().spacing(10).push(text(chat).size(15))
+                                            .push(match notifications {
+                                                0 => None,
+                                                other => Some(
+                                                    Container::new(text(other).size(20f32).color(Colour::text()))
+                                                        .padding(5)
+                                                        .style(|_|
+                                                            iced::widget::container::Style {
+                                                                background: Some(Background::Color(Colour::accent())),
+                                                                text_color: None,
+                                                                border: Border::default().rounded(5),
+                                                                shadow: Shadow::default(),
+                                                                snap: false
+                                                            }
+                                                        )
+                                                )
+                                            })
+                                        )
                                         .on_press_with(|| Global::SwitchTo(Pages::Chat(*id)).into())
                                         .style(
                                             |_, status|
@@ -263,7 +281,7 @@ impl Page for Application {
                 }
 
                 Global::ChatConnected(stable_id) => {
-                    self.active_chats.push((stable_id, stable_id.to_string()));
+                    self.active_chats.push((stable_id, stable_id.to_string(), 1));
                     Task::none()
                 }
 
@@ -286,6 +304,24 @@ impl Page for Application {
                         }
                     }
 
+                    Task::none()
+                }
+
+                Global::AddNotification(id) => {
+                    for chat in &mut self.active_chats {
+                        if chat.0 == id {
+                            chat.2 += 1;
+                        }
+                    }
+                    Task::none()
+                }
+
+                Global::ClearNotifications(id) => {
+                    for chat in &mut self.active_chats {
+                        if chat.0 == id {
+                            chat.2 = 0;
+                        }
+                    }
                     Task::none()
                 }
 

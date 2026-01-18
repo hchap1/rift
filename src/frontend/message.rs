@@ -53,6 +53,8 @@ pub enum Global {
         // Frontend
         UsernameInput(String),
         BindUsernameToId(usize, String),
+        AddNotification(usize),
+        ClearNotifications(usize),
 }
 
 message_enum! {

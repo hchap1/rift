@@ -154,10 +154,20 @@ impl Page for ChatPage {
                         },
                         
                         _ => {
-                            match self.add_packet(author, false, packet) {
+
+                            let task = match self.add_packet(author, false, packet) {
                                 Ok(()) => println!("Received packet into the GUI!").into(),
                                 Err(error) => Task::done(Global::Notify(error.into()).into())
-                            }
+                            };
+
+                            let other = if author != self.active_chat {
+                                Task::done(Global::AddNotification(author).into())
+                            } else {
+                                Task::none()
+                            };
+
+                            Task::batch(vec![task, other])
+
                         }
                     }
 
@@ -186,6 +196,7 @@ impl Page for ChatPage {
                     let active_chat_clone = self.active_chat;
 
                     Task::batch(vec![
+                        Task::done(Global::ClearNotifications(self.active_chat).into()),
                         Task::done(Global::Send(tracked_packet).into()),
                         Task::done(ChatMessage::SentLocalPacket(self.active_chat, packet).into()),
                         Task::future(async move { receiver.recv().await }).map(move |message| match message {
