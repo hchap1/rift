@@ -153,6 +153,7 @@ impl Page for ChatPage {
 
                 // Send the current contents of the message box to the current chat
                 ChatMessage::Send => {
+                    if self.message_box.is_empty() { return Task::none(); }
                     let message = take(&mut self.message_box);
                     let packet = Packet::message(message);
                     let (tracked_packet, receiver) = TrackedPacket::new(self.active_chat, packet.clone());
