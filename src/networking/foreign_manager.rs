@@ -36,7 +36,7 @@ impl ForeignManager {
         send.finish()?;
 
         // Create a buffer to accept the verification code.
-        match tokio::time::timeout(Duration::from_secs(5), recv.read_to_end(4)).await {
+        match tokio::time::timeout(Duration::from_secs(2), recv.read_to_end(4)).await {
             Ok(read_result) => {
                 let buffer = match read_result {
                     Ok(buffer) => buffer,

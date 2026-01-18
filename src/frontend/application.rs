@@ -84,7 +84,7 @@ impl Page for Application {
                                                 shadow: Shadow::default(),
                                                 snap: false
                                             }
-                                        ).into()))
+                                        ).into())).spacing(10)
                                         .push(
                                             match self.active_chats.is_empty() {
                                                 true => Some(text("You don't seem to have any chats yet...").color(Colour::loading())),

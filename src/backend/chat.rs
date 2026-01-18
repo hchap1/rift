@@ -21,10 +21,15 @@ impl Chat {
     }
 
     pub fn view(&self, foreign: String, local: String) -> Column<'_, Message> {
+        let mut previous: Option<bool> = None;
         Column::from_iter(
             self.packets.iter().map(|(is_local, packet, state)| {
+                let headerless = if let Some(previous) = previous {
+                    previous == *is_local
+                } else { false };
+                previous = Some(*is_local);
                 let username = if *is_local { &local } else { &foreign };
-                PacketWidget::parse(username.clone(), packet, *state).into()
+                PacketWidget::parse(username.clone(), packet, *state, headerless, *is_local).into()
             })
         ).padding(10).spacing(10)
     }
