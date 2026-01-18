@@ -1,6 +1,6 @@
 use std::sync::Arc;
-use iced::{Border, Length, Shadow, Task, widget::{Column, Container, Row, button, text}};
-use crate::{error::ChatError, frontend::{message::{Global, Message}, pages::{Pages, add_chat_page::AddChatPage, browse_chats_page::{BrowseChatsMessage, BrowseChatsPage}, chat_page::{ChatMessage, ChatPage}}, widget::Colour}, networking::{connection_manager::ConnectionManagerMessage, server::Local}, util::relay::Relay};
+use iced::{Border, Length, Shadow, Task, widget::{Column, Container, Row, Scrollable, button, text}};
+use crate::{error::ChatError, frontend::{message::{Global, Message}, pages::{Pages, add_chat_page::AddChatPage, chat_page::{ChatMessage, ChatPage}}, widget::Colour}, networking::{connection_manager::ConnectionManagerMessage, server::Local}, util::relay::Relay};
 use crate::frontend::notification::Notification;
 
 pub struct Application {
@@ -8,8 +8,8 @@ pub struct Application {
     active_page: Pages,
     chat_page: Option<Box<dyn Page>>,
     add_chat_page: Option<Box<dyn Page>>,
-    browse_chats_page: Option<Box<dyn Page>>,
     notification_stack: Vec<Notification>,
+    active_chats: Vec<usize>
 }
 
 pub trait Page {
@@ -24,8 +24,8 @@ impl Default for Application {
             active_page: Pages::AddChat,
             chat_page: Some(Box::new(ChatPage::default())),
             add_chat_page: Some(Box::new(AddChatPage::default())),
-            browse_chats_page: Some(Box::new(BrowseChatsPage::default())),
             notification_stack: vec![],
+            active_chats: vec![]
         }
     }
 }
@@ -36,7 +36,6 @@ impl Page for Application {
         let active_page = match &self.active_page {
             Pages::Chat(_) => &self.chat_page,
             Pages::AddChat => &self.add_chat_page,
-            Pages::BrowseChats => &self.browse_chats_page
         };
 
         let contents = if let Some(page) = active_page {
@@ -48,11 +47,16 @@ impl Page for Application {
         };
 
         Container::new(
-            Column::new()
+            Row::new()
                 .push(
-                    Row::new()
-                        .push(button("ADD CHAT").on_press_with(|| Global::SwitchTo(Pages::AddChat).into()))
-                        .push(button("BROWSE CHATS").on_press_with(|| Global::SwitchTo(Pages::BrowseChats).into()))
+                    Column::new().spacing(10).padding(10)
+                        .push(
+                            button("ADD CHAT").on_press_with(|| Global::SwitchTo(Pages::AddChat).into())
+                        ).push(
+                            Scrollable::new(Column::from_iter(self.active_chats.iter().map(
+                                |chat| button(text(chat)).on_press_with(|| Global::SwitchTo(Pages::Chat(*chat)).into()).into()
+                            )))
+                        )
                 ).push(contents)
         ).style(|_|
             iced::widget::container::Style {
@@ -123,7 +127,7 @@ impl Page for Application {
                     // Generate a relay converting new connections / errors into frontend messages.
                     // This will occur for foreign and locally initiated connections.
                     let new_connection_stream = Task::stream(Relay::consume_receiver(output_receiver, |message| match message {
-                        ConnectionManagerMessage::SuccessfulConnection(stable_id) => Some(BrowseChatsMessage::ChatConnected(stable_id).into()),
+                        ConnectionManagerMessage::SuccessfulConnection(stable_id) => Some(Global::ChatConnected(stable_id).into()),
                         ConnectionManagerMessage::Error(error) => Some(Global::Error(error).into()),
                         _ => Some(Message::Global(Global::None))
                     }));
@@ -171,19 +175,17 @@ impl Page for Application {
                     Task::done(ChatMessage::ImagePicked(chat_stable_id, path).into())
                 }
 
+                Global::ChatConnected(stable_id) => {
+                    self.active_chats.push(stable_id);
+                    Task::none()
+                }
+
                 Global::None => Task::none()
             }
 
             Message::AddChatMessage(msg) => {
                 match self.add_chat_page.as_mut() {
                     Some(page) => page.update(Message::AddChatMessage(msg)),
-                    None => Task::none()
-                }
-            }
-
-            Message::BrowseChatsMessage(msg) => {
-                match self.browse_chats_page.as_mut() {
-                    Some(page) => page.update(Message::BrowseChatsMessage(msg)),
                     None => Task::none()
                 }
             }

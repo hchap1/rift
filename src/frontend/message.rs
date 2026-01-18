@@ -1,9 +1,8 @@
 use std::{path::PathBuf, sync::Arc};
 
 use iroh::EndpointId;
-use tokio::task::JoinError;
 
-use crate::{error::{Error, Res}, frontend::{notification::Notification, pages::{Pages, add_chat_page::AddChatMessage, browse_chats_page::BrowseChatsMessage, chat_page::ChatMessage}}, networking::{packet::{Packet, TrackedPacket}, server::Local}};
+use crate::{error::{Error, Res}, frontend::{notification::Notification, pages::{Pages, add_chat_page::AddChatMessage, chat_page::ChatMessage}}, networking::{packet::{Packet, TrackedPacket}, server::Local}};
 
 macro_rules! message_enum {
     (
@@ -48,13 +47,13 @@ pub enum Global {
         Send(TrackedPacket),                       // Send a packet to the given stable_id, requires a Connection to the foreign node to exist already.
         Packet(usize, Packet),                     // When a new packet is received, this is the first message prior to it being relayed to page specific needs.
         Connect(EndpointId),
+        ChatConnected(usize),
 }
 
 message_enum! {
     pub enum Message {
         Global,
         AddChatMessage,
-        BrowseChatsMessage,
         ChatMessage
     }
 }
