@@ -6,7 +6,8 @@ use crate::{error::Res, networking::error::NetworkError, util::channel::send};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PacketType {
     Username,
-    Message
+    Message,
+    Image
 }
 
 impl PacketType {
@@ -14,6 +15,7 @@ impl PacketType {
         Ok(match byte {
             0 => PacketType::Username,
             1 => PacketType::Message,
+            2 => PacketType::Image,
             _ => return Err(NetworkError::InvalidPacket.into())
         })
     }
@@ -21,7 +23,8 @@ impl PacketType {
     pub fn to_byte(self) -> u8 {
         match self {
             PacketType::Username => 0,
-            PacketType::Message => 1
+            PacketType::Message => 1,
+            PacketType::Image => 2,
         }
     }
 }
