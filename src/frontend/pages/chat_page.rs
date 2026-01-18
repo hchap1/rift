@@ -56,7 +56,8 @@ impl Page for ChatPage {
                             Some(chat) => chat.view(String::from("FOREIGN"), String::from("LOCAL")),
                             None => Column::new()
                         }
-                    ).height(Length::FillPortion(10)).width(Length::FillPortion(1))
+                    ).auto_scroll(true)
+                    .height(Length::FillPortion(10)).width(Length::FillPortion(1))
                 ).push(
                     Row::new().spacing(20)
                         .push(
