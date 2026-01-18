@@ -1,4 +1,7 @@
+use std::io::Cursor;
+
 use async_channel::{Receiver, Sender, unbounded};
+use image::DynamicImage;
 use rand::{Rng, rng};
 
 use crate::{error::Res, networking::error::NetworkError, util::channel::send};
@@ -79,6 +82,20 @@ impl Packet {
             code,
             data: message.into_bytes()
         }
+    }
+
+    pub fn image(image: &DynamicImage) -> Res<Self> {
+
+        let mut rng = rng();
+        let code = rng.random_range(u32::MIN..=u32::MAX);
+        let mut data = Vec::new();
+        image.write_to(&mut Cursor::new(&mut data), image::ImageFormat::Png)?;
+
+        Ok(Packet {
+            kind: PacketType::Image,
+            code,
+            data
+        })
     }
 }
 

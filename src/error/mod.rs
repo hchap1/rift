@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use async_channel::{RecvError, SendError, TryRecvError};
+use image::ImageError;
 use iroh::endpoint::{BindError, ClosedStream, ConnectError, ConnectingError, ConnectionError, ReadToEndError, WriteError};
 
 use crate::networking::error::NetworkError;
@@ -79,6 +80,7 @@ error_enum! {
         NetworkError,
         ChatError,
         StdIoError,
-        ReadToEndError
+        ReadToEndError,
+        ImageError
     }
 }
