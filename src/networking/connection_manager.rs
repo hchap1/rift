@@ -9,6 +9,7 @@ use crate::error::ChatError;
 use crate::error::Error;
 use crate::error::Res;
 use crate::networking::packet::Packet;
+use crate::networking::packet::PacketType;
 use crate::networking::packet::TrackedPacket;
 use crate::networking::server::Foreign;
 use crate::util::channel::send;
@@ -94,11 +95,12 @@ impl ConnectionManager {
                     };
                     
                     if let Some(foreign) = connections.get(&tracked_packet.recipient_stable_id) {
+                        let kind = packet.kind;
                         match foreign.distribute(packet).await {
                             Ok(is_valid) => if !is_valid {
                                 tracked_packet.indicate_failure().await?;
                                 send(ConnectionManagerMessage::Error(ChatError::InvalidCode.into()), &sender).await?
-                            } else { tracked_packet.confirm_success().await? },
+                            } else if kind != PacketType::Username { tracked_packet.confirm_success().await? },
                             Err(error) => {
                                 tracked_packet.indicate_failure().await?;
                                 send(ConnectionManagerMessage::Error(error), &sender).await?
