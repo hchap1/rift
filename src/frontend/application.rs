@@ -161,11 +161,11 @@ impl Page for Application {
                     let option = match result {
                         Ok(option) => option,
                         Err(e) => return Task::done(Global::Error(e).into())
-                    }:
+                    };
 
                     let path = match option {
                         Some(path) => path,
-                        None => return Task::done(Global::Error(ChatError::NoFileSelected).into())
+                        None => return Task::done(Global::Error(ChatError::NoFileSelected.into()).into())
                     };
 
                     Task::done(ChatMessage::ImagePicked(chat_stable_id, path).into())
