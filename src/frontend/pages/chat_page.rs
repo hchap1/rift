@@ -1,7 +1,7 @@
 use std::{collections::HashMap, mem::take, path::PathBuf};
 use iced::{Background, Border, Length, Shadow, Task, widget::{Column, Container, Row, Scrollable, button, scrollable::{AutoScroll, Rail, Scroller}, text, text_input}};
 
-use crate::{backend::chat::Chat, error::{Error, Res}, frontend::{application::Page, message::{Global, Message}, widget::Colour}, networking::packet::{Packet, TrackedPacket, TrackedPacketResponse}};
+use crate::{backend::chat::Chat, error::{Error, Res}, frontend::{application::Page, message::{Global, Message}, widget::Colour}, networking::packet::{Packet, PacketType, TrackedPacket, TrackedPacketResponse}};
 
 #[derive(Debug, Clone)]
 pub enum ChatMessage {
@@ -53,7 +53,7 @@ impl Page for ChatPage {
                 .push(
                     Scrollable::new(
                         match self.chats.get(&self.active_chat) {
-                            Some(chat) => chat.view(String::from("FOREIGN"), String::from("LOCAL")),
+                            Some(chat) => chat.view(String::from("LOCAL")),
                             None => Column::new()
                         }
                     )
@@ -137,9 +137,24 @@ impl Page for ChatPage {
                 }
 
                 // Message to record an incoming message. This is the only interface through which the user can see a message.
-                ChatMessage::ReceiveForeignPacket(author, packet) => match self.add_packet(author, false, packet) {
-                    Ok(()) => println!("Received packet into the GUI!").into(),
-                    Err(error) => Task::done(Global::Notify(error.into()).into())
+                ChatMessage::ReceiveForeignPacket(author, packet) => {
+
+                    match packet.kind {
+                        PacketType::Username => {
+                            if let Some(chat) = self.chats.get_mut(&author) {
+                                chat.set_foreign_username(String::from_utf8_lossy(&packet.data).to_string());
+                            }
+                            Task::none()
+                        },
+                        
+                        _ => {
+                            match self.add_packet(author, false, packet) {
+                                Ok(()) => println!("Received packet into the GUI!").into(),
+                                Err(error) => Task::done(Global::Notify(error.into()).into())
+                            }
+                        }
+                    }
+
                 },
 
                 // Identical to ReceiveForeignPacket but idiomatically this is where packets locally initiated are sent to be displayed.
