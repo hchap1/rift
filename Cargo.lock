@@ -3,6 +3,20 @@
 version = 4
 
 [[package]]
+name = "Rift"
+version = "0.1.0"
+dependencies = [
+ "async-channel",
+ "iced",
+ "image",
+ "iroh",
+ "pin-project",
+ "rand 0.9.2",
+ "rfd",
+ "tokio",
+]
+
+[[package]]
 name = "ab_glyph"
 version = "0.2.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2702,20 +2716,6 @@ dependencies = [
  "url",
  "zeroize",
  "zeroize_derive",
-]
-
-[[package]]
-name = "iroh-ftp-gui"
-version = "0.1.0"
-dependencies = [
- "async-channel",
- "iced",
- "image",
- "iroh",
- "pin-project",
- "rand 0.9.2",
- "rfd",
- "tokio",
 ]
 
 [[package]]
