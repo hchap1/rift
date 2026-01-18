@@ -1,5 +1,5 @@
 use std::{collections::HashMap, mem::take, path::PathBuf};
-use iced::{Background, Border, Length, Shadow, Task, widget::{Column, Container, Row, Scrollable, button, text, text_input}};
+use iced::{Background, Border, Length, Shadow, Task, widget::{Column, Container, Row, Scrollable, button, scrollable::{AutoScroll, Rail, Scroller}, text, text_input}};
 
 use crate::{backend::chat::Chat, error::{Error, Res}, frontend::{application::Page, message::{Global, Message}, widget::Colour}, networking::packet::{Packet, TrackedPacket, TrackedPacketResponse}};
 
@@ -56,9 +56,37 @@ impl Page for ChatPage {
                             Some(chat) => chat.view(String::from("FOREIGN"), String::from("LOCAL")),
                             None => Column::new()
                         }
-                    ).auto_scroll(true)
+                    )
                     .anchor_bottom()
                     .height(Length::FillPortion(10)).width(Length::FillPortion(1))
+                    .style(|_, _|
+                        iced::widget::scrollable::Style {
+                            container: iced::widget::container::Style::default(),
+                            vertical_rail: Rail {
+                                background: Some(Background::Color(Colour::foreground())),
+                                border: Border::default().rounded(10),
+                                scroller: Scroller {
+                                    background: Background::Color(Colour::accent()),
+                                    border: Border::default().rounded(10)
+                                }
+                            },
+                            horizontal_rail: Rail {
+                                background: Some(Background::Color(Colour::foreground())),
+                                border: Border::default().rounded(10),
+                                scroller: Scroller {
+                                    background: Background::Color(Colour::accent()),
+                                    border: Border::default().rounded(10)
+                                }
+                            },
+                            gap: None,
+                            auto_scroll: AutoScroll {
+                                background: Background::Color(Colour::accent()),
+                                border: Border::default().rounded(10),
+                                shadow: Shadow::default(),
+                                icon: Colour::text()
+                            }
+                        }
+                    )
                 ).push(
                     Row::new().spacing(20)
                         .push(
