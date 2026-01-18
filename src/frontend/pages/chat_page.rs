@@ -1,7 +1,7 @@
 use std::{collections::HashMap, mem::take, path::PathBuf};
 use iced::{Background, Border, Length, Shadow, Task, widget::{Column, Container, Row, Scrollable, button, scrollable::{AutoScroll, Rail, Scroller}, text, text_input}};
 
-use crate::{backend::chat::Chat, error::{Error, Res}, frontend::{application::Ph age, message::{Global, Message}, widget::Colour}, networking::packet::{Packet, TrackedPacket, TrackedPacketResponse}};
+use crate::{backend::chat::Chat, error::{Error, Res}, frontend::{application::Page, message::{Global, Message}, widget::Colour}, networking::packet::{Packet, TrackedPacket, TrackedPacketResponse}};
 
 #[derive(Debug, Clone)]
 pub enum ChatMessage {
