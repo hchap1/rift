@@ -8,6 +8,7 @@ pub enum ChatMessage {
     SetActiveChat(usize),
     ReceiveForeignPacket(usize, Packet),
     SentLocalPacket(usize, Packet),
+    UsernameUpdate(String),
 
     // Update the message box (paste, type)
     UpdateMessageBox(String),
@@ -28,7 +29,8 @@ pub enum ChatMessage {
 pub struct ChatPage {
     active_chat: usize,
     chats: HashMap<usize, Chat>,
-    message_box: String
+    message_box: String,
+    username: String
 }
 
 impl ChatPage {
@@ -53,7 +55,10 @@ impl Page for ChatPage {
                 .push(
                     Scrollable::new(
                         match self.chats.get(&self.active_chat) {
-                            Some(chat) => chat.view(String::from("LOCAL")),
+                            Some(chat) => chat.view(match self.username.is_empty() {
+                                true => String::from("LOCAL"),
+                                false => self.username.clone()
+                            }),
                             None => Column::new()
                         }
                     )
@@ -246,6 +251,20 @@ impl Page for ChatPage {
                             Err(_) => ChatMessage::PacketFailed(stable_id_of_recipient, unique_packet_id)
                         }.into())
                     ])
+                }
+
+                ChatMessage::UsernameUpdate(username) => {
+                    self.username = username.clone();
+
+                    let mut dispatch: Vec<Task<Message>> = vec![];
+                    let packet = Packet::username(username);
+
+                    for chat in self.chats.keys() {
+                        let (tracked_packet, _) = TrackedPacket::new(*chat, packet.clone());
+                        dispatch.push(Task::done(Global::Send(tracked_packet).into()));
+                    }
+
+                    Task::batch(dispatch)
                 }
             },
             _ => Task::none()

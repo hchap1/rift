@@ -48,6 +48,10 @@ pub enum Global {
         Packet(usize, Packet),                     // When a new packet is received, this is the first message prior to it being relayed to page specific needs.
         Connect(EndpointId),
         ChatConnected(usize),
+        NewUsername,
+        
+        // Frontend
+        UsernameInput(String),
 }
 
 message_enum! {

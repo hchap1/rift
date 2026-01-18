@@ -92,6 +92,19 @@ impl Packet {
         }
     }
 
+    pub fn username(username: String) -> Self {
+
+        let mut rng = rng();
+        let code = rng.random_range(u32::MIN..=u32::MAX);
+
+        Packet {
+            kind: PacketType::Username,
+            code,
+            data: username.into_bytes(),
+            decoded_image: None
+        }
+    }
+
     pub fn image(image: &DynamicImage) -> Res<Self> {
 
         let mut rng = rng();

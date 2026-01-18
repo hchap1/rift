@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use iced::{Background, Border, Length, Shadow, Task, widget::{Column, Container, Row, Scrollable, button, text}};
+use iced::{Background, Border, Length, Shadow, Task, widget::{Column, Container, Row, Scrollable, button, text, text_input}};
 use crate::{error::ChatError, frontend::{message::{Global, Message}, pages::{Pages, add_chat_page::AddChatPage, chat_page::{ChatMessage, ChatPage}}, widget::Colour}, networking::{connection_manager::ConnectionManagerMessage, server::Local}, util::relay::Relay};
 use crate::frontend::notification::Notification;
 
@@ -9,7 +9,9 @@ pub struct Application {
     chat_page: Option<Box<dyn Page>>,
     add_chat_page: Option<Box<dyn Page>>,
     notification_stack: Vec<Notification>,
-    active_chats: Vec<usize>
+    active_chats: Vec<usize>,
+    username_input: String,
+    username: Option<String>
 }
 
 pub trait Page {
@@ -25,7 +27,9 @@ impl Default for Application {
             chat_page: Some(Box::new(ChatPage::default())),
             add_chat_page: Some(Box::new(AddChatPage::default())),
             notification_stack: vec![],
-            active_chats: vec![]
+            active_chats: vec![],
+            username_input: String::new(),
+            username: None
         }
     }
 }
@@ -51,6 +55,44 @@ impl Page for Application {
                 .push(
                     Column::new().spacing(10).padding(10)
                         .push(
+                            Row::new().spacing(5).padding(10)
+                                .push(
+                                    text_input(
+                                        match self.username.as_ref() {
+                                            Some(username) => username,
+                                            None => "Username..."
+                                        },
+                                        &self.username_input
+                                    ).on_input(|new_username| Global::UsernameInput(new_username).into())
+                                    .on_submit(Global::NewUsername.into())
+                                    .style(|_,_| iced::widget::text_input::Style {
+                                        background: Background::Color(Colour::foreground()),
+                                        border: Border::default().rounded(10),
+                                        icon: Colour::accent(),
+                                        placeholder: Colour::loading(),
+                                        value: Colour::text(),
+                                        selection: Colour::accent()
+                                    })
+                                ).push(
+                                    button(text("SET"))
+                                        .on_press(Global::NewUsername.into())
+                                        .style(
+                                            |_, status|
+                                            iced::widget::button::Style {
+                                                background: Some(Background::Color(match status {
+                                                    button::Status::Active => Colour::accent(),
+                                                    button::Status::Hovered => Colour::foreground(),
+                                                    _ => Colour::background()
+                                                })),
+                                                text_color: Colour::text(),
+                                                border: Border::default().rounded(10),
+                                                shadow: Shadow::default(),
+                                                snap: false
+                                            }
+                                        ).width(Length::Fill)
+
+                                )
+                        ).push(
                             button("ADD CHAT").on_press_with(|| Global::SwitchTo(Pages::AddChat).into())
                                 .style(
                                     |_, status|
@@ -223,6 +265,18 @@ impl Page for Application {
                 Global::ChatConnected(stable_id) => {
                     self.active_chats.push(stable_id);
                     Task::none()
+                }
+
+                Global::UsernameInput(value) => {
+                    self.username_input = value;
+                    Task::none()
+                }
+
+                Global::NewUsername => {
+                    if self.username_input.is_empty() { return Task::none(); }
+                    let new_username = std::mem::take(&mut self.username_input);
+                    self.username = Some(new_username.clone());
+                    Task::done(ChatMessage::UsernameUpdate(new_username).into())
                 }
 
                 Global::None => Task::none()
