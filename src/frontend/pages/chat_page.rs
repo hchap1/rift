@@ -49,7 +49,7 @@ impl ChatPage {
 impl Page for ChatPage {
     fn view(&self) -> Container<'_, Message> {
         Container::new(
-            Column::new().height(Length::Fill)
+            Column::new().height(Length::Fill).padding(10)
                 .push(
                     Scrollable::new(
                         match self.chats.get(&self.active_chat) {
@@ -57,6 +57,7 @@ impl Page for ChatPage {
                             None => Column::new()
                         }
                     ).auto_scroll(true)
+                    .anchor_bottom()
                     .height(Length::FillPortion(10)).width(Length::FillPortion(1))
                 ).push(
                     Row::new().spacing(20)
