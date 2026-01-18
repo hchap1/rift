@@ -1,6 +1,7 @@
 use iced::widget::Column;
 use iced::widget::Container;
 use iced::widget::text;
+use iced::Length;
 
 use crate::backend::chat::PacketState;
 use crate::frontend::widget::Colour;
@@ -22,6 +23,7 @@ impl PacketWidget {
             },
             PacketType::Image => {
                 Container::new(packet.decoded_image.as_ref().map(iced::widget::image))
+                    .height(Length::Fixed(256f32))
             },
             PacketType::Username => Container::new(text(format!("Username Update: {}", String::from_utf8_lossy(&packet.data))))
         };
