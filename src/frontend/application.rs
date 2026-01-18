@@ -9,7 +9,7 @@ pub struct Application {
     chat_page: Option<Box<dyn Page>>,
     add_chat_page: Option<Box<dyn Page>>,
     notification_stack: Vec<Notification>,
-    active_chats: Vec<usize>,
+    active_chats: Vec<(usize, String)>,
     username_input: String,
     username: Option<String>
 }
@@ -111,8 +111,8 @@ impl Page for Application {
                         ).push(
                             Container::new(
                                 Scrollable::new(Column::from_iter(self.active_chats.iter().map(
-                                    |chat| button(text(chat).size(15))
-                                        .on_press_with(|| Global::SwitchTo(Pages::Chat(*chat)).into())
+                                    |(id, chat)| button(text(chat).size(15))
+                                        .on_press_with(|| Global::SwitchTo(Pages::Chat(*id)).into())
                                         .style(
                                             |_, status|
                                             iced::widget::button::Style {
@@ -263,7 +263,7 @@ impl Page for Application {
                 }
 
                 Global::ChatConnected(stable_id) => {
-                    self.active_chats.push(stable_id);
+                    self.active_chats.push((stable_id, stable_id.to_string()));
                     Task::none()
                 }
 
@@ -277,6 +277,16 @@ impl Page for Application {
                     let new_username = std::mem::take(&mut self.username_input);
                     self.username = Some(new_username.clone());
                     Task::done(ChatMessage::UsernameUpdate(new_username).into())
+                }
+
+                Global::BindUsernameToId(stable_id, username) => {
+                    for chat in &mut self.active_chats {
+                        if chat.0 == stable_id {
+                            chat.1 = username.clone();
+                        }
+                    }
+
+                    Task::none()
                 }
 
                 Global::None => Task::none()

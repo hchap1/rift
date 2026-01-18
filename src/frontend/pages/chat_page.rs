@@ -146,10 +146,11 @@ impl Page for ChatPage {
 
                     match packet.kind {
                         PacketType::Username => {
+                            let foreign_username = String::from_utf8_lossy(&packet.data).to_string();
                             if let Some(chat) = self.chats.get_mut(&author) {
-                                chat.set_foreign_username(String::from_utf8_lossy(&packet.data).to_string());
+                                chat.set_foreign_username(foreign_username.clone());
                             }
-                            Task::none()
+                            Task::done(Global::BindUsernameToId(author, foreign_username).into())
                         },
                         
                         _ => {
