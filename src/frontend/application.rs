@@ -157,6 +157,20 @@ impl Page for Application {
                     Task::none()
                 }
 
+                Global::LoadImage(chat_stable_id, result) => {
+                    let option = match result {
+                        Ok(option) => option,
+                        Err(e) => return Task::done(Global::Error(e).into())
+                    }:
+
+                    let path = match option {
+                        Some(path) => path,
+                        None => return Task::done(Global::Error(ChatError::NoFileSelected).into())
+                    };
+
+                    Task::done(ChatMessage::ImagePicked(chat_stable_id, path).into())
+                }
+
                 Global::None => Task::none()
             }
 

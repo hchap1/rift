@@ -1,8 +1,7 @@
-use std::{collections::HashMap, mem::take};
-
+use std::{collections::HashMap, mem::take, path::PathBuf};
 use iced::{Background, Border, Length, Task, widget::{Column, Container, Scrollable, text_input}};
 
-use crate::{backend::chat::Chat, error::Res, frontend::{application::Page, message::{Global, Message}, widget::Colour}, networking::packet::{Packet, TrackedPacket, TrackedPacketResponse}};
+use crate::{backend::chat::Chat, error::{Error, Res}, frontend::{application::Page, message::{Global, Message}, widget::Colour}, networking::packet::{Packet, TrackedPacket, TrackedPacketResponse}};
 
 #[derive(Debug, Clone)]
 pub enum ChatMessage {
@@ -18,7 +17,11 @@ pub enum ChatMessage {
 
     // Indicators on packet state
     PacketConfirmed(usize, usize),
-    PacketFailed(usize, usize)
+    PacketFailed(usize, usize),
+
+    // Pick image
+    PickImage,
+    ImagePicked(usize, PathBuf)
 }
 
 #[derive(Default)]
@@ -125,7 +128,6 @@ impl Page for ChatPage {
 
                 // Handle a failed message
                 ChatMessage::PacketFailed(stable_id, unique_id) => {
-                    println!("PACKET FAILED!");
                     if let Some(chat) = self.chats.get_mut(&stable_id) {
                         chat.update_state(unique_id, crate::backend::chat::PacketState::Failed);
                     }
@@ -135,12 +137,48 @@ impl Page for ChatPage {
 
                 // Handle a successful packet that received a confirmation code from the foreign client
                 ChatMessage::PacketConfirmed(stable_id, unique_id) => {
-                    println!("PACKET CONFIRMED!");
                     if let Some(chat) = self.chats.get_mut(&stable_id) {
                         chat.update_state(unique_id, crate::backend::chat::PacketState::Verified);
                     }
 
                     Task::none()
+                },
+
+                ChatMessage::PickImage => {
+                    let active_chat = self.active_chat;
+                    Task::perform(tokio::task::spawn_blocking(|| rfd::FileDialog::new().pick_file()), move |res| Global::LoadImage(active_chat, res.map_err(Error::from)).into())
+                }
+
+                ChatMessage::ImagePicked(stable_id_of_recipient, path) => {
+                    
+                    let image = match image::open(path) {
+                        Ok(image) => image,
+                        Err(e) => return Task::done(Global::Error(e.into()).into())
+                    };
+
+                    let packet = match Packet::image(&image) {
+                        Ok(packet) => packet,
+                        Err(e) => return Task::done(Global::Error(e.into()).into())
+                    };
+
+                    let (tracked_packet, receiver) = TrackedPacket::new(self.active_chat, packet.clone());
+                    let unique_packet_id = match self.chats.get(&self.active_chat) {
+                        Some(chat) => chat.get_unique_id(),
+                        None => 0
+                    };
+
+                    Task::batch(vec![
+                        Task::done(Global::Send(tracked_packet).into()),
+                        Task::done(ChatMessage::SentLocalPacket(stable_id_of_recipient, packet).into()),
+                        Task::future(async move { receiver.recv().await }).map(move |message| match message {
+                            Ok(response) => match response {
+                                TrackedPacketResponse::Confirmed => ChatMessage::PacketConfirmed(stable_id_of_recipient, unique_packet_id),
+                                TrackedPacketResponse::Failed => ChatMessage::PacketFailed(stable_id_of_recipient, unique_packet_id)
+                            }
+
+                            Err(_) => ChatMessage::PacketFailed(stable_id_of_recipient, unique_packet_id)
+                        }.into())
+                    ])
                 }
             },
             _ => Task::none()

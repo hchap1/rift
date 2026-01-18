@@ -2,6 +2,7 @@ use std::sync::Arc;
 use async_channel::{RecvError, SendError, TryRecvError};
 use image::ImageError;
 use iroh::endpoint::{BindError, ClosedStream, ConnectError, ConnectingError, ConnectionError, ReadToEndError, WriteError};
+use tokio::task::JoinError;
 
 use crate::networking::error::NetworkError;
 
@@ -36,7 +37,8 @@ macro_rules! error_enum {
 pub enum ChatError {
     NoChatOpen,
     InvalidCode,
-    NetworkingBackendFailedToInitialise
+    NetworkingBackendFailedToInitialise,
+    NoFileSelected
 }
 
 #[derive(Debug, Clone)]
@@ -81,6 +83,7 @@ error_enum! {
         ChatError,
         StdIoError,
         ReadToEndError,
-        ImageError
+        ImageError,
+        JoinError,
     }
 }
