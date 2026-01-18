@@ -94,9 +94,9 @@ impl Page for Application {
                                     shadow: Shadow::default(),
                                     snap: false
                                 }
-                            ).padding(10).width(Length::FillPortion(1))
+                            ).padding(10).width(Length::FillPortion(1)).height(Length::Fill)
                         )
-                ).push(contents.width(Length::FillPortion(4)))
+                ).push(contents.width(Length::FillPortion(3)).height(Length::Fill))
         ).style(|_|
             iced::widget::container::Style {
                 text_color: None,
