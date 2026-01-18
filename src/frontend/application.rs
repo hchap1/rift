@@ -52,28 +52,51 @@ impl Page for Application {
                     Column::new().spacing(10).padding(10)
                         .push(
                             button("ADD CHAT").on_press_with(|| Global::SwitchTo(Pages::AddChat).into())
+                                .style(
+                                    |_, status|
+                                    iced::widget::button::Style {
+                                        background: Some(Background::Color(match status {
+                                            button::Status::Active => Colour::accent(),
+                                            button::Status::Hovered => Colour::foreground(),
+                                            _ => Colour::background()
+                                        })),
+                                        text_color: Colour::text(),
+                                        border: Border::default().rounded(10),
+                                        shadow: Shadow::default(),
+                                        snap: false
+                                    }
+                                ).width(Length::Fill)
                         ).push(
-                            Scrollable::new(Column::from_iter(self.active_chats.iter().map(
-                                |chat| button(text(chat))
-                                    .on_press_with(|| Global::SwitchTo(Pages::Chat(*chat)).into())
-                                    .height(Length::Fill)
-                                    .style(
-                                        |_, status|
-                                        iced::widget::button::Style {
-                                            background: Some(Background::Color(match status {
-                                                button::Status::Active => Colour::accent(),
-                                                button::Status::Hovered => Colour::foreground(),
-                                                _ => Colour::background()
-                                            })),
-                                            text_color: Colour::text(),
-                                            border: Border::default().rounded(10),
-                                            shadow: Shadow::default(),
-                                            snap: false
-                                        }
-                                    ).into()
-                            )))
+                            Container::new(
+                                Scrollable::new(Column::from_iter(self.active_chats.iter().map(
+                                    |chat| button(text(chat).size(15))
+                                        .on_press_with(|| Global::SwitchTo(Pages::Chat(*chat)).into())
+                                        .style(
+                                            |_, status|
+                                            iced::widget::button::Style {
+                                                background: Some(Background::Color(match status {
+                                                    button::Status::Active => Colour::accent(),
+                                                    button::Status::Hovered => Colour::foreground(),
+                                                    _ => Colour::background()
+                                                })),
+                                                text_color: Colour::text(),
+                                                border: Border::default().rounded(10),
+                                                shadow: Shadow::default(),
+                                                snap: false
+                                            }
+                                        ).into()
+                                )))
+                            ).style(|_|
+                                iced::widget::container::Style {
+                                    background: Some(Background::Color(Colour::foreground())),
+                                    text_color: None,
+                                    border: Border::default().rounded(10),
+                                    shadow: Shadow::default(),
+                                    snap: false
+                                }
+                            ).padding(10).width(Length::FillPortion(1))
                         )
-                ).push(contents)
+                ).push(contents.width(Length::FillPortion(4)))
         ).style(|_|
             iced::widget::container::Style {
                 text_color: None,

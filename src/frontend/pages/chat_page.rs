@@ -73,8 +73,7 @@ impl Page for ChatPage {
                                     selection: Colour::accent()
                                 })
                         ).push(
-                            button(text!("IMAGE"))
-                                .height(Length::Fill)
+                            button(text!("IMAGE").size(15))
                                 .on_press_with(|| ChatMessage::PickImage.into())
                                 .style(
                                     |_, status|
