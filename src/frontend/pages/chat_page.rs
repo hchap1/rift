@@ -1,5 +1,5 @@
 use std::{collections::HashMap, mem::take, path::PathBuf};
-use iced::{Background, Border, Length, Task, widget::{Column, Container, Scrollable, text_input}};
+use iced::{Background, Border, Length, Shadow, Task, widget::{Column, Container, Row, Scrollable, button, text, text_input}};
 
 use crate::{backend::chat::Chat, error::{Error, Res}, frontend::{application::Page, message::{Global, Message}, widget::Colour}, networking::packet::{Packet, TrackedPacket, TrackedPacketResponse}};
 
@@ -58,18 +58,38 @@ impl Page for ChatPage {
                         }
                     ).height(Length::FillPortion(10)).width(Length::FillPortion(1))
                 ).push(
-                    text_input(&format!("Message {}", self.active_chat), &self.message_box)
-                        .on_input_maybe(Some(|new_value| ChatMessage::UpdateMessageBox(new_value).into()))
-                        .on_submit(ChatMessage::Send.into())
-                        .size(32)
-                        .style(|_,_| iced::widget::text_input::Style {
-                            background: Background::Color(Colour::foreground()),
-                            border: Border::default().rounded(10),
-                            icon: Colour::accent(),
-                            placeholder: Colour::loading(),
-                            value: Colour::text(),
-                            selection: Colour::accent()
-                        })
+                    Row::new().spacing(20)
+                        .push(
+                            text_input(&format!("Message {}", self.active_chat), &self.message_box)
+                                .on_input_maybe(Some(|new_value| ChatMessage::UpdateMessageBox(new_value).into()))
+                                .on_submit(ChatMessage::Send.into())
+                                .size(32)
+                                .style(|_,_| iced::widget::text_input::Style {
+                                    background: Background::Color(Colour::foreground()),
+                                    border: Border::default().rounded(10),
+                                    icon: Colour::accent(),
+                                    placeholder: Colour::loading(),
+                                    value: Colour::text(),
+                                    selection: Colour::accent()
+                                })
+                        ).push(
+                            button(text!("IMAGE"))
+                                .on_press_with(|| ChatMessage::PickImage.into())
+                                .style(
+                                    |_, status|
+                                    iced::widget::button::Style {
+                                        background: Some(Background::Color(match status {
+                                            button::Status::Active => Colour::accent(),
+                                            button::Status::Hovered => Colour::foreground(),
+                                            _ => Colour::background()
+                                        })),
+                                        text_color: Colour::text(),
+                                        border: Border::default().rounded(10),
+                                        shadow: Shadow::default(),
+                                        snap: false
+                                    }
+                                )
+                        )
                 )
         )
     }
