@@ -98,11 +98,11 @@ impl ConnectionManager {
                         let kind = packet.kind;
                         match foreign.distribute(packet).await {
                             Ok(is_valid) => if !is_valid {
-                                tracked_packet.indicate_failure().await?;
+                                if kind.verify() { tracked_packet.indicate_failure().await?; }
                                 send(ConnectionManagerMessage::Error(ChatError::InvalidCode.into()), &sender).await?
-                            } else if kind != PacketType::Username { tracked_packet.confirm_success().await? },
+                            } else if kind.verify() { tracked_packet.confirm_success().await? },
                             Err(error) => {
-                                tracked_packet.indicate_failure().await?;
+                                if kind.verify() { tracked_packet.indicate_failure().await?; }
                                 send(ConnectionManagerMessage::Error(error), &sender).await?
                             }
                         }

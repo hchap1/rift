@@ -31,6 +31,14 @@ impl PacketType {
             PacketType::Image => 2,
         }
     }
+
+    pub fn verify(self) -> bool {
+        match self {
+            PacketType::Username => false,
+            PacketType::Message => true,
+            PacketType::Image => true
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
