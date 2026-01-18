@@ -73,7 +73,7 @@ impl ForeignManager {
             };
 
 
-            let buffer = match receiver.read_to_end(100000000).await {
+            let buffer = match receiver.read_to_end(1000000000).await {
                 Ok(buffer) => buffer,
 
                 // All errors indicate failure.
