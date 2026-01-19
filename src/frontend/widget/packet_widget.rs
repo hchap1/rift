@@ -23,7 +23,7 @@ impl PacketWidget {
             },
             PacketType::Image => {
                 Container::new(packet.decoded_image.as_ref().map(iced::widget::image))
-                    .height(Length::Fixed(256f32))
+                    .height(Length::Fixed(512f32))
             },
             PacketType::Username => Container::new(text(format!("Username Update: {}", String::from_utf8_lossy(&packet.data))))
         };

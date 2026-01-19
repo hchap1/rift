@@ -9,7 +9,6 @@ use crate::error::ChatError;
 use crate::error::Error;
 use crate::error::Res;
 use crate::networking::packet::Packet;
-use crate::networking::packet::PacketType;
 use crate::networking::packet::TrackedPacket;
 use crate::networking::server::Foreign;
 use crate::util::channel::send;
@@ -108,7 +107,7 @@ impl ConnectionManager {
                         }
                     }
                 }
-                error => send(error, &sender).await?
+                error => { let _ = send(error, &sender).await; }
             }
         }
 
