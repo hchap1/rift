@@ -9,7 +9,7 @@ use crate::{frontend::message::Message, networking::packet::{Packet, PacketType}
 
 pub struct PacketWidget;
 impl PacketWidget {
-    pub fn parse(author: String, packet: &Packet, packet_state: PacketState, headerless: bool, local: bool) -> Container<'_, Message> {
+    pub fn parse(author: String, packet: &Packet, packet_state: PacketState, headerless: bool) -> Container<'_, Message> {
         let content_widget = match packet.kind {
             PacketType::Message => {
                Container::new(text(String::from_utf8_lossy(&packet.data))

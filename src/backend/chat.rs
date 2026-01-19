@@ -31,7 +31,7 @@ impl Chat {
                 } else { false };
                 previous = Some(*is_local);
                 let username = if *is_local { &local } else { &self.foreign_username.clone().unwrap_or(String::from("FOREIGN")) };
-                PacketWidget::parse(username.clone(), packet, *state, headerless, *is_local).into()
+                PacketWidget::parse(username.clone(), packet, *state, headerless).into()
             })
         ).padding(10).spacing(10)
     }
