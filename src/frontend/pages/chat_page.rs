@@ -34,6 +34,11 @@ pub struct ChatPage {
 }
 
 impl ChatPage {
+
+    pub fn make_empty(&mut self, foreign_stable_id: usize) {
+        self.chats.insert(foreign_stable_id, Chat::new());
+    }
+
     /// Function to record a packet exchange into the GUI.
     fn add_packet(&mut self, foreign_stable_id: usize, local: bool, packet: Packet) -> Res<()> {
         match self.chats.get_mut(&foreign_stable_id) {

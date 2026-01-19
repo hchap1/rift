@@ -120,7 +120,6 @@ impl Packet {
         let mut data = Vec::new();
         image.write_to(&mut Cursor::new(&mut data), image::ImageFormat::Png)?;
 
-
         Ok(Packet {
             kind: PacketType::Image,
             code,

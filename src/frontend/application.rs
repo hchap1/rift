@@ -6,7 +6,7 @@ use crate::frontend::notification::Notification;
 pub struct Application {
     networking: Option<Arc<Local>>,
     active_page: Pages,
-    chat_page: Option<Box<dyn Page>>,
+    chat_page: Option<ChatPage>,
     add_chat_page: Option<Box<dyn Page>>,
     notification_stack: Vec<Notification>,
     active_chats: Vec<(usize, String, usize)>,
@@ -24,7 +24,7 @@ impl Default for Application {
         Application {
             networking: None,
             active_page: Pages::AddChat,
-            chat_page: Some(Box::new(ChatPage::default())),
+            chat_page: Some(ChatPage::default()),
             add_chat_page: Some(Box::new(AddChatPage::default())),
             notification_stack: vec![],
             active_chats: vec![],
@@ -37,17 +37,9 @@ impl Default for Application {
 impl Page for Application {
     fn view(&self) -> Container<'_, Message> {
 
-        let active_page = match &self.active_page {
-            Pages::Chat(_) => &self.chat_page,
-            Pages::AddChat => &self.add_chat_page,
-        };
-
-        let contents = if let Some(page) = active_page {
-            page.view()
-        } else {
-            Container::new(
-                text("No active page.")
-            )
+        let contents = match &self.active_page {
+            Pages::Chat(_) => if let Some(page) = self.chat_page.as_ref() { page.view() } else { Container::new(text("Error")) }
+            Pages::AddChat => if let Some(page) = self.add_chat_page.as_ref() { page.view() } else { Container::new(text("Error")) }
         };
 
         Container::new(
@@ -282,6 +274,9 @@ impl Page for Application {
 
                 Global::ChatConnected(stable_id) => {
                     self.active_chats.push((stable_id, stable_id.to_string(), 1));
+                    if let Some(chat_page) = self.chat_page.as_mut() {
+                        chat_page.make_empty(stable_id);
+                    }
                     match self.username.as_ref() {
                         Some(username) => Task::done(Global::Send(TrackedPacket::new(stable_id, Packet::username(username.to_string())).0).into()),
                         None => Task::none()
